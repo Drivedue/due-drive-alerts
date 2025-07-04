@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Calendar, FileText, AlertCircle, CheckCircle, Clock, Eye, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
+import AddDocumentForm from "@/components/AddDocumentForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,6 +17,7 @@ const Documents = () => {
   const [documents, setDocuments] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -94,6 +96,51 @@ const Documents = () => {
   useEffect(() => {
     fetchData();
   }, [user]);
+
+  const handleAddDocument = () => {
+    setShowAddForm(true);
+  };
+
+  const handleCloseAddForm = () => {
+    setShowAddForm(false);
+  };
+
+  const handleSubmitDocument = async (documentData: any) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .insert({
+          user_id: user.id,
+          title: documentData.title,
+          document_type: documentData.document_type,
+          vehicle_id: documentData.vehicle_id,
+          expiry_date: documentData.expiry_date || null,
+          notes: documentData.notes || null
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Document added successfully!",
+      });
+
+      // Refresh the documents list
+      fetchData();
+      handleCloseAddForm();
+    } catch (error) {
+      console.error('Error adding document:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add document",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleViewDetails = (document: any) => {
     console.log('Viewing details for document:', document);
@@ -229,7 +276,7 @@ const Documents = () => {
                       Add a vehicle first to create documents for it.
                     </p>
                   ) : (
-                    <Button className="bg-[#0A84FF] hover:bg-[#0A84FF]/90">
+                    <Button onClick={handleAddDocument} className="bg-[#0A84FF] hover:bg-[#0A84FF]/90">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Document
                     </Button>
@@ -325,6 +372,23 @@ const Documents = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Floating Add Button */}
+      <Button
+        className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-[#0A84FF] hover:bg-[#0A84FF]/90 shadow-lg"
+        onClick={handleAddDocument}
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
+
+      {/* Add Document Form Modal */}
+      {showAddForm && (
+        <AddDocumentForm
+          onClose={handleCloseAddForm}
+          onSubmit={handleSubmitDocument}
+          vehicles={vehicles}
+        />
+      )}
     </MobileLayout>
   );
 };
