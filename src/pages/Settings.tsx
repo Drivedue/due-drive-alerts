@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Mail, MessageSquare, Shield, CreditCard, HelpCircle, ChevronRight } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Bell, Mail, MessageSquare, Shield, CreditCard, HelpCircle, ChevronRight, Phone } from "lucide-react";
 import MobileLayout from "@/components/MobileLayout";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -51,20 +52,22 @@ const Settings = () => {
     }));
   };
 
-  const settingsSections = [
+  const faqData = [
     {
-      title: "Account",
-      items: [
-        { icon: CreditCard, label: "Subscription", value: user.plan, action: () => navigate('/upgrade') },
-        { icon: Shield, label: "Privacy", action: () => {} },
-      ]
+      question: "How many vehicles can I register?",
+      answer: "Free users: 1 vehicle\nPro users: Up to 5 vehicles\nTeam users: More than 5 vehicles"
     },
     {
-      title: "Support",
-      items: [
-        { icon: HelpCircle, label: "Help & FAQ", action: () => {} },
-        { icon: Mail, label: "Contact Support", action: () => {} },
-      ]
+      question: "What reminders will I receive?",
+      answer: "You'll get notifications 1 day, 1 week, 2, 3, and 4 weeks before document expiry."
+    },
+    {
+      question: "What types of notifications are supported?",
+      answer: "Push, Email, and SMS (depending on your plan and preferences)."
+    },
+    {
+      question: "Can I change my reminder preferences?",
+      answer: "Yes, you can adjust notification channels in your settings at any time."
     }
   ];
 
@@ -142,35 +145,89 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      {/* Other Settings */}
-      {settingsSections.map((section, sectionIndex) => (
-        <Card key={sectionIndex} className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">{section.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {section.items.map((item, itemIndex) => (
-              <Button
-                key={itemIndex}
-                variant="ghost"
-                className="w-full justify-between h-auto p-3"
-                onClick={item.action}
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon className="h-4 w-4 text-gray-600" />
-                  <span>{item.label}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {item.value && (
-                    <Badge variant="secondary">{item.value}</Badge>
-                  )}
-                  <ChevronRight className="h-4 w-4 text-gray-400" />
-                </div>
-              </Button>
+      {/* Account Settings */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Account</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          <Button
+            variant="ghost"
+            className="w-full justify-between h-auto p-3"
+            onClick={() => navigate('/upgrade')}
+          >
+            <div className="flex items-center gap-3">
+              <CreditCard className="h-4 w-4 text-gray-600" />
+              <span>Subscription</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{user.plan}</Badge>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Privacy Policy */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Privacy Policy
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            We value your privacy. DriveDue only collects necessary information, such as your name, email, phone number, and vehicle document details, to provide timely reminders. Your data is securely stored and never shared with third parties. Notifications are sent based on your selected preferences. By using the app, you agree to our data use policy.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Help & FAQ */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <HelpCircle className="h-5 w-5" />
+            Help & FAQ
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            {faqData.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-left text-sm">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-gray-600 whitespace-pre-line">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </CardContent>
-        </Card>
-      ))}
+          </Accordion>
+        </CardContent>
+      </Card>
+
+      {/* Contact Us */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Phone className="h-5 w-5" />
+            Contact Us
+          </CardTitle>
+          <CardDescription>Need support or have a question?</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-3">
+            <Mail className="h-4 w-4 text-gray-600" />
+            <span className="text-sm">drivedue.company@gmail.com</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <MessageSquare className="h-4 w-4 text-gray-600" />
+            <span className="text-sm">WhatsApp: +234 701 297 5251</span>
+          </div>
+          <p className="text-sm text-gray-600 mt-2">We're here to help!</p>
+        </CardContent>
+      </Card>
 
       {/* Upgrade Prompt for Free Users */}
       {user.plan === "Free" && (
