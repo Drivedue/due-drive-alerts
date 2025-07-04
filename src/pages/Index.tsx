@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,22 +21,22 @@ const Index = () => {
     {
       icon: Car,
       title: "Vehicle Management",
-      description: "Add and manage multiple vehicles with their documents"
+      description: "Manage multiple vehicles"
     },
     {
       icon: Calendar,
-      title: "Smart Reminders",
-      description: "Get notified before document expiry"
+      title: "Smart Reminders", 
+      description: "Never miss renewals"
     },
     {
       icon: Bell,
       title: "Multi-Channel Alerts",
-      description: "Push, email, and SMS notifications"
+      description: "Push, email & SMS"
     },
     {
       icon: Shield,
-      title: "Never Miss Renewals",
-      description: "Stay compliant with automatic tracking"
+      title: "Stay Compliant",
+      description: "Automatic tracking"
     }
   ];
 
@@ -45,19 +44,19 @@ const Index = () => {
     {
       name: "Free",
       price: "Free",
-      features: ["1 Vehicle", "Push Notifications", "Email Reminders"],
+      features: ["1 Vehicle", "Push Notifications"],
       popular: false
     },
     {
       name: "Pro",
-      price: "$9.99/month",
-      features: ["Up to 5 Vehicles", "SMS Notifications", "Priority Support"],
+      price: "$9.99/mo",
+      features: ["5 Vehicles", "SMS Notifications"],
       popular: true
     },
     {
       name: "Team",
-      price: "$29.99/month",
-      features: ["Unlimited Vehicles", "Team Management", "24/7 Support"],
+      price: "$29.99/mo",
+      features: ["Unlimited", "Team Management"],
       popular: false
     }
   ];
@@ -152,20 +151,20 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-4">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-3">
             <div className="bg-[#0A84FF] p-2 rounded-full">
-              <Car className="h-6 w-6 text-white" />
+              <Car className="h-5 w-5 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
             Drive<span className="text-[#0A84FF]">Due</span>
           </h1>
-          <p className="text-lg text-gray-600 mb-6 max-w-xl mx-auto">
-            Never miss another vehicle document renewal. Get timely reminders for licenses, insurance, and more.
+          <p className="text-base text-gray-600 mb-4 max-w-lg mx-auto">
+            Never miss vehicle document renewals. Get timely reminders for licenses, insurance, and more.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <Button size="lg" className="bg-[#0A84FF] hover:bg-[#0A84FF]/90" onClick={() => navigate('/register')}>
               Get Started Free
             </Button>
@@ -176,52 +175,48 @@ const Index = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
           {features.map((feature, index) => (
-            <Card key={index} className="text-center">
-              <CardHeader className="pb-2">
-                <div className="mx-auto bg-blue-100 p-2 rounded-full w-fit mb-2">
-                  <feature.icon className="h-5 w-5 text-[#0A84FF]" />
-                </div>
-                <CardTitle className="text-base">{feature.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">{feature.description}</p>
-              </CardContent>
+            <Card key={index} className="text-center p-4">
+              <div className="mx-auto bg-blue-100 p-2 rounded-full w-fit mb-2">
+                <feature.icon className="h-4 w-4 text-[#0A84FF]" />
+              </div>
+              <h3 className="font-medium text-sm mb-1">{feature.title}</h3>
+              <p className="text-xs text-gray-600">{feature.description}</p>
             </Card>
           ))}
         </div>
 
         {/* Pricing Section */}
-        <div className="mb-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Plan</h2>
-            <p className="text-gray-600">Select the perfect plan for your needs</p>
+        <div className="mb-6">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Simple Pricing</h2>
+            <p className="text-sm text-gray-600">Choose the right plan for you</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {plans.map((plan, index) => (
               <Card key={index} className={`relative ${plan.popular ? 'border-[#0A84FF] border-2' : ''}`}>
                 {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#0A84FF]">
-                    Most Popular
+                  <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#0A84FF] text-xs">
+                    Popular
                   </Badge>
                 )}
                 <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <div className="text-2xl font-bold text-[#0A84FF]">{plan.price}</div>
+                  <CardTitle className="text-lg">{plan.name}</CardTitle>
+                  <div className="text-xl font-bold text-[#0A84FF]">{plan.price}</div>
                 </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 mb-4">
+                <CardContent className="p-4 pt-0">
+                  <ul className="space-y-1 mb-3">
                     {plan.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center gap-2">
                         <Check className="h-3 w-3 text-green-500" />
-                        <span className="text-sm">{feature}</span>
+                        <span className="text-xs">{feature}</span>
                       </li>
                     ))}
                   </ul>
                   <Button 
-                    className={`w-full ${plan.popular ? 'bg-[#0A84FF] hover:bg-[#0A84FF]/90' : ''}`}
+                    className={`w-full text-sm ${plan.popular ? 'bg-[#0A84FF] hover:bg-[#0A84FF]/90' : ''}`}
                     variant={plan.popular ? "default" : "outline"}
                     onClick={() => navigate('/register')}
                   >
