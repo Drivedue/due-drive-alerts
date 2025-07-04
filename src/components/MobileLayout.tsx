@@ -11,9 +11,9 @@ interface MobileLayoutProps {
 
 const MobileLayout = ({ children, title, showBackButton, onBack }: MobileLayoutProps) => {
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-white pb-20">
       {title && (
-        <div className="bg-blue-600 text-white p-4 sticky top-0 z-40">
+        <div className="bg-[#0A84FF] text-white p-4 sticky top-0 z-40">
           <div className="flex items-center justify-between">
             {showBackButton && (
               <button onClick={onBack} className="text-white">

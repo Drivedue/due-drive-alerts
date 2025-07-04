@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -173,7 +174,7 @@ const Settings = () => {
 
       {/* Upgrade Prompt for Free Users */}
       {user.plan === "Free" && (
-        <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+        <Card className="bg-gradient-to-r from-[#0A84FF] to-purple-600 text-white">
           <CardContent className="p-4 text-center">
             <h3 className="font-bold mb-2">Upgrade to Pro</h3>
             <p className="text-blue-100 mb-4 text-sm">

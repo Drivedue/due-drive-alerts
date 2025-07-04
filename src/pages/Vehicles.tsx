@@ -88,7 +88,7 @@ const Vehicles = () => {
       <div className="grid grid-cols-3 gap-3 mb-6">
         <Card className="text-center">
           <CardContent className="p-3">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+            <div className="text-2xl font-bold text-[#0A84FF]">{stats.total}</div>
             <div className="text-xs text-gray-600">Total</div>
           </CardContent>
         </Card>
@@ -142,8 +142,8 @@ const Vehicles = () => {
               </div>
 
               {vehicle.hasNotifications && (
-                <div className="mt-3 flex items-center gap-2 text-blue-600 text-sm">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <div className="mt-3 flex items-center gap-2 text-[#0A84FF] text-sm">
+                  <div className="w-2 h-2 bg-[#0A84FF] rounded-full"></div>
                   <span>SMS Notifications</span>
                 </div>
               )}
@@ -154,7 +154,7 @@ const Vehicles = () => {
 
       {/* Floating Add Button */}
       <Button
-        className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg"
+        className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-[#0A84FF] hover:bg-[#0A84FF]/90 shadow-lg"
         onClick={() => navigate('/vehicles?add=true')}
       >
         <Car className="h-6 w-6" />

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,8 +56,8 @@ const Profile = () => {
       {/* Profile Header */}
       <Card className="mb-6">
         <CardContent className="p-6 text-center">
-          <div className="bg-blue-100 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-            <User className="h-10 w-10 text-blue-600" />
+          <div className="bg-[#0A84FF]/10 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+            <User className="h-10 w-10 text-[#0A84FF]" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-1">{formData.fullName}</h2>
           <p className="text-gray-600 text-sm mb-3">{formData.email}</p>
@@ -168,7 +167,7 @@ const Profile = () => {
       {/* Actions */}
       <div className="space-y-3">
         <Button 
-          className="w-full bg-blue-600 hover:bg-blue-700"
+          className="w-full bg-[#0A84FF] hover:bg-[#0A84FF]/90"
           onClick={() => navigate('/settings')}
         >
           Upgrade to Pro

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,11 +49,11 @@ const Dashboard = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2 rounded-full">
-                <Car className="h-5 w-5 text-blue-600" />
+              <div className="bg-[#0A84FF]/10 p-2 rounded-full">
+                <Car className="h-5 w-5 text-[#0A84FF]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-blue-600">{user.vehiclesCount}</div>
+                <div className="text-2xl font-bold text-[#0A84FF]">{user.vehiclesCount}</div>
                 <p className="text-xs text-gray-600">Vehicles</p>
               </div>
             </div>
@@ -104,7 +103,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/vehicles')}>
           <CardContent className="p-4 text-center">
-            <Car className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+            <Car className="h-8 w-8 mx-auto mb-2 text-[#0A84FF]" />
             <h4 className="font-semibold text-sm">My Vehicles</h4>
           </CardContent>
         </Card>
@@ -118,7 +117,7 @@ const Dashboard = () => {
       </div>
 
       {/* Upgrade Prompt */}
-      <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+      <Card className="bg-gradient-to-r from-[#0A84FF] to-purple-600 text-white">
         <CardContent className="p-4 text-center">
           <h3 className="font-bold mb-2">Upgrade to Pro</h3>
           <p className="text-blue-100 mb-4 text-sm">

@@ -24,7 +24,7 @@ const MobileNavigation = () => {
             size="sm"
             onClick={() => navigate(item.path)}
             className={`flex flex-col items-center gap-1 p-2 ${
-              item.isActive ? 'text-blue-600' : 'text-gray-500'
+              item.isActive ? 'text-[#0A84FF]' : 'text-gray-500'
             }`}
           >
             <item.icon className="h-5 w-5" />
