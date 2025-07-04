@@ -1,98 +1,110 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Car, Calendar, Bell, AlertTriangle, Plus, Settings } from "lucide-react";
+import { Car, Calendar, Bell, AlertTriangle, Plus, Settings, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
-import PaystackUpgrade from "@/components/PaystackUpgrade";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [vehicles, setVehicles] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [upcomingRenewals, setUpcomingRenewals] = useState<any[]>([]);
   const [userPlan, setUserPlan] = useState("Free");
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ vehicleCount: 0, documentCount: 0, expiredCount: 0 });
   
   // Get user's display name from auth metadata or email
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
-  // Fetch user data including vehicles, documents, and subscription
-  const fetchUserData = async () => {
+  // Optimized data fetching with parallel requests
+  const fetchDashboardData = async () => {
     if (!user) return;
     
     try {
       setLoading(true);
       
-      // Fetch vehicles
-      const { data: vehiclesData, error: vehiclesError } = await supabase
-        .from('vehicles')
-        .select('*')
-        .eq('user_id', user.id);
+      // Fetch all data in parallel for better performance
+      const [vehiclesResult, documentsResult, subscriptionResult] = await Promise.all([
+        supabase
+          .from('vehicles')
+          .select('id, license_plate, make, model')
+          .eq('user_id', user.id),
+        
+        supabase
+          .from('documents')
+          .select(`
+            id,
+            title,
+            document_type,
+            expiry_date,
+            vehicle_id,
+            vehicles!inner(license_plate)
+          `)
+          .eq('user_id', user.id)
+          .not('expiry_date', 'is', null),
+        
+        supabase
+          .from('subscriptions')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .single()
+      ]);
 
-      if (vehiclesError) throw vehiclesError;
-      setVehicles(vehiclesData || []);
+      if (vehiclesResult.error) throw vehiclesResult.error;
+      if (documentsResult.error) throw documentsResult.error;
 
-      // Fetch documents with vehicle information
-      const { data: documentsData, error: documentsError } = await supabase
-        .from('documents')
-        .select(`
-          *,
-          vehicles (
-            license_plate,
-            make,
-            model
-          )
-        `)
-        .eq('user_id', user.id);
+      const vehiclesData = vehiclesResult.data || [];
+      const documentsData = documentsResult.data || [];
 
-      if (documentsError) throw documentsError;
-      
-      // Process documents to add status information
-      const processedDocuments = (documentsData || []).map(doc => {
-        const today = new Date();
-        const expiryDate = doc.expiry_date ? new Date(doc.expiry_date) : null;
-        let status = 'unknown';
-        let daysLeft = 0;
+      setVehicles(vehiclesData);
 
-        if (expiryDate) {
+      // Process documents for renewals
+      const today = new Date();
+      const processedRenewals = documentsData
+        .map(doc => {
+          const expiryDate = new Date(doc.expiry_date);
           const timeDiff = expiryDate.getTime() - today.getTime();
-          daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+          const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
           
+          let status = 'safe';
           if (daysLeft < 0) {
             status = 'expired';
           } else if (daysLeft <= 30) {
             status = 'warning';
-          } else {
-            status = 'safe';
           }
-        }
 
-        return {
-          ...doc,
-          status,
-          daysLeft,
-          vehiclePlate: doc.vehicles?.license_plate || 'Unknown Vehicle'
-        };
+          return {
+            ...doc,
+            status,
+            daysLeft,
+            vehiclePlate: doc.vehicles?.license_plate || 'Unknown Vehicle'
+          };
+        })
+        .filter(doc => doc.status === 'expired' || doc.status === 'warning')
+        .sort((a, b) => a.daysLeft - b.daysLeft)
+        .slice(0, 5);
+
+      setUpcomingRenewals(processedRenewals);
+
+      // Update stats
+      const expiredCount = processedRenewals.filter(doc => doc.status === 'expired').length;
+      setStats({
+        vehicleCount: vehiclesData.length,
+        documentCount: documentsData.length,
+        expiredCount: expiredCount
       });
 
-      setDocuments(processedDocuments);
-
-      // Get subscription status
-      const { data: subscriptionData } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single();
-
-      if (subscriptionData) {
+      // Set user plan
+      if (subscriptionResult.data) {
         setUserPlan('Pro');
       } else {
         setUserPlan('Free');
@@ -111,22 +123,8 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchUserData();
+    fetchDashboardData();
   }, [user]);
-
-  // Refresh data every 30 seconds to keep dashboard updated
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchUserData();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [user]);
-
-  // Get upcoming renewals (expired and expiring soon documents)
-  const upcomingRenewals = documents.filter(doc => 
-    doc.status === 'expired' || doc.status === 'warning'
-  ).slice(0, 5); // Show max 5 items
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -137,19 +135,12 @@ const Dashboard = () => {
     }
   };
 
-  const handleEditDocument = (document: any) => {
-    toast({
-      title: "Opening My Garage",
-      description: `Navigate to My Garage to manage your documents.`,
-    });
-    
-    // Navigate to the garage page
+  const handleManageDocuments = () => {
     navigate('/garage');
   };
 
-  const handleUpgradeSuccess = () => {
-    // Refresh user data after successful upgrade
-    fetchUserData();
+  const handleUpgradeClick = () => {
+    navigate('/settings');
   };
 
   if (loading) {
@@ -164,25 +155,40 @@ const Dashboard = () => {
 
   return (
     <MobileLayout title="Dashboard">
-      {/* Welcome Section */}
+      {/* Header with Pro Button */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-1">Welcome back, {userName}!</h2>
-        <p className="text-gray-600 text-sm">Stay on top of your vehicle documents</p>
-        <Badge variant={userPlan === "Pro" ? "default" : "secondary"} className="mt-2">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Welcome back, {userName}!</h2>
+            <p className="text-gray-600 text-sm">Stay on top of your vehicle documents</p>
+          </div>
+          {userPlan === "Free" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleUpgradeClick}
+              className="flex items-center gap-2 text-[#0A84FF] border-[#0A84FF] hover:bg-[#0A84FF]/10"
+            >
+              <Crown className="h-4 w-4" />
+              Upgrade to Pro
+            </Button>
+          )}
+        </div>
+        <Badge variant={userPlan === "Pro" ? "default" : "secondary"} className="mt-1">
           {userPlan} Plan
         </Badge>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2">
               <div className="bg-[#0A84FF]/10 p-2 rounded-full">
-                <Car className="h-5 w-5 text-[#0A84FF]" />
+                <Car className="h-4 w-4 text-[#0A84FF]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-[#0A84FF]">{vehicles.length}</div>
+                <div className="text-xl font-bold text-[#0A84FF]">{stats.vehicleCount}</div>
                 <p className="text-xs text-gray-600">Vehicles</p>
               </div>
             </div>
@@ -190,14 +196,28 @@ const Dashboard = () => {
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-red-100 p-2 rounded-full">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2">
+              <div className="bg-green-100 p-2 rounded-full">
+                <Calendar className="h-4 w-4 text-green-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-red-600">{upcomingRenewals.length}</div>
-                <p className="text-xs text-gray-600">Need Attention</p>
+                <div className="text-xl font-bold text-green-600">{stats.documentCount}</div>
+                <p className="text-xs text-gray-600">Documents</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2">
+              <div className="bg-red-100 p-2 rounded-full">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-red-600">{stats.expiredCount}</div>
+                <p className="text-xs text-gray-600">Expired</p>
               </div>
             </div>
           </CardContent>
@@ -227,7 +247,7 @@ const Dashboard = () => {
                     className="w-full" 
                     variant="outline" 
                     size="sm"
-                    onClick={() => handleEditDocument(renewal)}
+                    onClick={handleManageDocuments}
                   >
                     Manage Documents
                   </Button>
@@ -254,9 +274,6 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Upgrade Prompt */}
-      <PaystackUpgrade userPlan={userPlan} onUpgradeSuccess={handleUpgradeSuccess} />
     </MobileLayout>
   );
 };

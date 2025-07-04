@@ -5,7 +5,6 @@ import NotificationSettings from "@/components/settings/NotificationSettings";
 import ReminderSchedule from "@/components/settings/ReminderSchedule";
 import AccountSettings from "@/components/settings/AccountSettings";
 import InformationSection from "@/components/settings/InformationSection";
-import PaystackUpgrade from "@/components/PaystackUpgrade";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,7 +62,7 @@ const Settings = () => {
       <MobileLayout title="Settings">
         <NotificationSettings userPlan={userPlan} />
         <ReminderSchedule />
-        <AccountSettings userPlan={userPlan} />
+        <AccountSettings userPlan={userPlan} onUpgradeSuccess={handleUpgradeSuccess} />
         
         {/* User Profile Section */}
         <Card className="mb-6">
@@ -99,7 +98,6 @@ const Settings = () => {
         </Card>
 
         <InformationSection />
-        <PaystackUpgrade userPlan={userPlan} onUpgradeSuccess={handleUpgradeSuccess} />
       </MobileLayout>
     </ProtectedRoute>
   );
