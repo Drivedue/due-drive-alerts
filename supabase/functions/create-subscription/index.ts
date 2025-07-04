@@ -49,7 +49,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(customerData.message || 'Failed to create customer');
     }
 
-    // Create payment transaction
+    // Create payment transaction (one-time payment, not subscription)
     const paymentResponse = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
@@ -59,11 +59,11 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         email: email,
         amount: amount, // Amount in kobo (₦9,999 = 999900 kobo)
-        plan: plan,
         callback_url: callback_url,
         metadata: {
           plan_type: plan,
-          subscription: true
+          subscription: true,
+          customer_code: customerData.data.customer_code
         }
       }),
     });
