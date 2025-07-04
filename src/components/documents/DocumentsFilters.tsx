@@ -9,7 +9,7 @@ interface DocumentsFiltersProps {
   vehicles: any[];
   onAddDocument: () => void;
   onViewDetails: (document: any) => void;
-  onRenewDocument: (document: any) => void;
+  onEditDocument: (document: any) => void;
 }
 
 const DocumentsFilters = ({
@@ -19,7 +19,7 @@ const DocumentsFilters = ({
   vehicles,
   onAddDocument,
   onViewDetails,
-  onRenewDocument
+  onEditDocument
 }: DocumentsFiltersProps) => {
   const filterDocuments = (filter: string) => {
     switch (filter) {
@@ -50,7 +50,7 @@ const DocumentsFilters = ({
           activeTab={activeTab}
           onAddDocument={onAddDocument}
           onViewDetails={onViewDetails}
-          onRenewDocument={onRenewDocument}
+          onEditDocument={onEditDocument}
         />
       </TabsContent>
     </Tabs>

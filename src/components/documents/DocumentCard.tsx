@@ -2,16 +2,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, AlertCircle, CheckCircle, Clock, FileText, Eye, RefreshCw } from "lucide-react";
+import { Calendar, AlertCircle, CheckCircle, Clock, FileText, Eye, Edit } from "lucide-react";
 import DocumentDetailsModal from "./DocumentDetailsModal";
 
 interface DocumentCardProps {
   document: any;
   onViewDetails: (document: any) => void;
-  onRenewDocument: (document: any) => void;
+  onEditDocument: (document: any) => void;
 }
 
-const DocumentCard = ({ document, onViewDetails, onRenewDocument }: DocumentCardProps) => {
+const DocumentCard = ({ document, onViewDetails, onEditDocument }: DocumentCardProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'expired':
@@ -66,10 +66,10 @@ const DocumentCard = ({ document, onViewDetails, onRenewDocument }: DocumentCard
           <Button 
             size="sm" 
             className="flex-1 text-xs bg-blue-600 hover:bg-blue-700"
-            onClick={() => onRenewDocument(document)}
+            onClick={() => onEditDocument(document)}
           >
-            <RefreshCw className="h-3 w-3 mr-1" />
-            Renew Now
+            <Edit className="h-3 w-3 mr-1" />
+            Edit Document
           </Button>
         </div>
       </CardContent>

@@ -8,7 +8,7 @@ interface DocumentsListProps {
   activeTab: string;
   onAddDocument: () => void;
   onViewDetails: (document: any) => void;
-  onRenewDocument: (document: any) => void;
+  onEditDocument: (document: any) => void;
 }
 
 const DocumentsList = ({
@@ -17,7 +17,7 @@ const DocumentsList = ({
   activeTab,
   onAddDocument,
   onViewDetails,
-  onRenewDocument
+  onEditDocument
 }: DocumentsListProps) => {
   if (documents.length === 0) {
     return (
@@ -36,7 +36,7 @@ const DocumentsList = ({
           key={document.id}
           document={document}
           onViewDetails={onViewDetails}
-          onRenewDocument={onRenewDocument}
+          onEditDocument={onEditDocument}
         />
       ))}
     </div>
