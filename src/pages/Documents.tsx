@@ -1,14 +1,16 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, FileText, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Calendar, FileText, AlertCircle, CheckCircle, Clock, Eye, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
 
 const Documents = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const { toast } = useToast();
 
   // Mock documents data
   const documents = [
@@ -18,7 +20,10 @@ const Documents = () => {
       type: "Driver's License",
       expiryDate: "2024-08-15",
       daysLeft: 42,
-      status: "warning"
+      status: "warning",
+      issueDate: "2019-08-15",
+      authority: "Lagos State FRSC",
+      documentNumber: "LAG123456789"
     },
     {
       id: 2,
@@ -26,7 +31,10 @@ const Documents = () => {
       type: "Vehicle Insurance",
       expiryDate: "2024-12-31",
       daysLeft: 180,
-      status: "safe"
+      status: "safe",
+      issueDate: "2023-12-31",
+      authority: "Leadway Assurance",
+      documentNumber: "LW987654321"
     },
     {
       id: 3,
@@ -34,7 +42,10 @@ const Documents = () => {
       type: "Roadworthiness",
       expiryDate: "2024-07-01",
       daysLeft: -3,
-      status: "expired"
+      status: "expired",
+      issueDate: "2023-07-01",
+      authority: "Lagos State VIO",
+      documentNumber: "VIO456789123"
     },
     {
       id: 4,
@@ -42,9 +53,32 @@ const Documents = () => {
       type: "Registration",
       expiryDate: "2025-03-15",
       daysLeft: 245,
-      status: "safe"
+      status: "safe",
+      issueDate: "2024-03-15",
+      authority: "Lagos State VIO",
+      documentNumber: "REG789123456"
     }
   ];
+
+  const handleViewDetails = (document: any) => {
+    // This would typically open a detailed view or modal
+    console.log('Viewing details for document:', document);
+  };
+
+  const handleRenewDocument = (document: any) => {
+    toast({
+      title: "Renewal Process Started",
+      description: `Initiating renewal for ${document.type}. You will be redirected to the renewal portal.`,
+    });
+    
+    // Simulate renewal process - in real app, this would redirect to appropriate renewal portal
+    setTimeout(() => {
+      toast({
+        title: "Redirecting...",
+        description: "Taking you to the renewal portal.",
+      });
+    }, 1500);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -155,10 +189,66 @@ const Documents = () => {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 text-xs">
-                      View Details
-                    </Button>
-                    <Button size="sm" className="flex-1 text-xs bg-blue-600 hover:bg-blue-700">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex-1 text-xs">
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Details
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>{document.type} Details</DialogTitle>
+                          <DialogDescription>
+                            Complete information for your {document.type.toLowerCase()}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700">Vehicle</label>
+                              <p className="text-sm text-gray-900">{document.vehicle}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700">Document Type</label>
+                              <p className="text-sm text-gray-900">{document.type}</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700">Issue Date</label>
+                              <p className="text-sm text-gray-900">{document.issueDate}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700">Expiry Date</label>
+                              <p className="text-sm text-gray-900">{document.expiryDate}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Issuing Authority</label>
+                            <p className="text-sm text-gray-900">{document.authority}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Document Number</label>
+                            <p className="text-sm text-gray-900">{document.documentNumber}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Status</label>
+                            <Badge className={`${getStatusColor(document.status)} mt-1`}>
+                              {getStatusIcon(document.status)}
+                              {getStatusText(document.status, document.daysLeft)}
+                            </Badge>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    
+                    <Button 
+                      size="sm" 
+                      className="flex-1 text-xs bg-blue-600 hover:bg-blue-700"
+                      onClick={() => handleRenewDocument(document)}
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
                       Renew Now
                     </Button>
                   </div>
