@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Car, Plus, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 
 interface VehicleCardProps {
   vehicle: any;
@@ -10,7 +10,7 @@ interface VehicleCardProps {
   onAddDocument: (vehicleId: string) => void;
 }
 
-const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
+const VehicleCard = ({ vehicle, onEdit }: VehicleCardProps) => {
   const getVehicleTypeColor = (type: string) => {
     switch (type?.toLowerCase()) {
       case 'private':
@@ -41,7 +41,7 @@ const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
           </div>
         </div>
         
-        <div className="space-y-2 text-sm text-gray-600 mb-4">
+        <div className="space-y-2 text-sm text-gray-600">
           <div className="flex justify-between">
             <span>Make & Model:</span>
             <span className="font-medium">{vehicle.make} {vehicle.model}</span>
@@ -62,18 +62,6 @@ const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
               <span className="font-medium text-xs">{vehicle.owner_email}</span>
             </div>
           )}
-        </div>
-
-        <div className="border-t pt-3">
-          <Button 
-            onClick={() => onAddDocument(vehicle.id)} 
-            variant="outline" 
-            size="sm" 
-            className="w-full text-[#0A84FF] border-[#0A84FF] hover:bg-[#0A84FF]/10"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Documents +
-          </Button>
         </div>
       </CardContent>
     </Card>
