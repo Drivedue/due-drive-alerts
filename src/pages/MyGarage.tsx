@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 const MyGarage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<any>(null);
@@ -48,8 +48,25 @@ const MyGarage = () => {
     }
   };
 
+  const fetchDocuments = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: documentsData, error: documentsError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (documentsError) throw documentsError;
+      setDocuments(documentsData || []);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    }
+  };
+
   useEffect(() => {
     fetchVehicles();
+    fetchDocuments();
   }, [user]);
 
   const handleAddVehicle = () => {
@@ -91,6 +108,10 @@ const MyGarage = () => {
         description: "Document added successfully!",
       });
 
+      // Refresh both vehicles and documents to trigger updates
+      await fetchDocuments();
+      await fetchVehicles();
+      
       setShowDocumentForm(false);
       setSelectedVehicleId('');
     } catch (error) {
@@ -173,12 +194,20 @@ const MyGarage = () => {
     <MobileLayout title="My Garage">
       {/* Stats Card */}
       <div className="mb-6">
-        <Card className="text-center">
-          <CardContent className="p-3">
-            <div className="text-2xl font-bold text-[#0A84FF]">{vehicles.length}</div>
-            <div className="text-xs text-gray-600">Vehicles</div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="text-center">
+            <CardContent className="p-3">
+              <div className="text-2xl font-bold text-[#0A84FF]">{vehicles.length}</div>
+              <div className="text-xs text-gray-600">Vehicles</div>
+            </CardContent>
+          </Card>
+          <Card className="text-center">
+            <CardContent className="p-3">
+              <div className="text-2xl font-bold text-green-600">{documents.length}</div>
+              <div className="text-xs text-gray-600">Documents</div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Search Bar */}
