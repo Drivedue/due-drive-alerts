@@ -18,7 +18,9 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   const [formData, setFormData] = useState({
     title: '',
     document_type: '',
+    document_number: '',
     vehicle_id: '',
+    issue_date: '',
     expiry_date: '',
     notes: ''
   });
@@ -34,12 +36,13 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   };
 
   const documentTypes = [
-    'registration',
-    'insurance',
-    'inspection',
-    'license',
-    'roadworthiness',
-    'other'
+    { value: 'drivers_license', label: "Driver's License" },
+    { value: 'vehicle_license', label: 'Vehicle License' },
+    { value: 'insurance', label: 'Insurance' },
+    { value: 'vehicle_inspection_certificate', label: 'Vehicle Inspection Certificate' },
+    { value: 'road_worthiness', label: 'Road Worthiness' },
+    { value: 'registration', label: 'Registration' },
+    { value: 'other', label: 'Other' }
   ];
 
   return (
@@ -72,12 +75,22 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
                 </SelectTrigger>
                 <SelectContent>
                   {documentTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="document_number">Document Number</Label>
+              <Input
+                id="document_number"
+                value={formData.document_number}
+                onChange={(e) => handleChange('document_number', e.target.value)}
+                placeholder="Enter document number"
+              />
             </div>
             
             <div>
@@ -95,9 +108,19 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <Label htmlFor="issue_date">Issue Date</Label>
+              <Input
+                id="issue_date"
+                type="date"
+                value={formData.issue_date}
+                onChange={(e) => handleChange('issue_date', e.target.value)}
+              />
+            </div>
             
             <div>
-              <Label htmlFor="expiry_date">Expiry Date (Optional)</Label>
+              <Label htmlFor="expiry_date">Expiry Date</Label>
               <Input
                 id="expiry_date"
                 type="date"

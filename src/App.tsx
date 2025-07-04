@@ -10,6 +10,9 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import VehiclesAndDocuments from "./pages/VehiclesAndDocuments";
+import MyGarage from "./pages/MyGarage";
+import Vehicles from "./pages/Vehicles";
+import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import PaymentCallback from "./pages/PaymentCallback";
@@ -29,9 +32,9 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/vehicles" element={<VehiclesAndDocuments />} />
-            <Route path="/documents" element={<VehiclesAndDocuments />} />
-            <Route path="/garage" element={<VehiclesAndDocuments />} />
+            <Route path="/vehicles" element={<Vehicles />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/garage" element={<MyGarage />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/payment/callback" element={<PaymentCallback />} />

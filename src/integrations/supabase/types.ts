@@ -12,10 +12,12 @@ export type Database = {
       documents: {
         Row: {
           created_at: string
+          document_number: string | null
           document_type: string
           expiry_date: string | null
           file_url: string | null
           id: string
+          issue_date: string | null
           notes: string | null
           reminder_days: number | null
           title: string
@@ -25,10 +27,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          document_number?: string | null
           document_type: string
           expiry_date?: string | null
           file_url?: string | null
           id?: string
+          issue_date?: string | null
           notes?: string | null
           reminder_days?: number | null
           title: string
@@ -38,10 +42,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          document_number?: string | null
           document_type?: string
           expiry_date?: string | null
           file_url?: string | null
           id?: string
+          issue_date?: string | null
           notes?: string | null
           reminder_days?: number | null
           title?: string
@@ -130,8 +136,10 @@ export type Database = {
           license_plate: string
           make: string
           model: string
+          owner_email: string | null
           updated_at: string
           user_id: string
+          vehicle_type: string | null
           vin: string | null
           year: number
         }
@@ -142,8 +150,10 @@ export type Database = {
           license_plate: string
           make: string
           model: string
+          owner_email?: string | null
           updated_at?: string
           user_id: string
+          vehicle_type?: string | null
           vin?: string | null
           year: number
         }
@@ -154,8 +164,10 @@ export type Database = {
           license_plate?: string
           make?: string
           model?: string
+          owner_email?: string | null
           updated_at?: string
           user_id?: string
+          vehicle_type?: string | null
           vin?: string | null
           year?: number
         }
