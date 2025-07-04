@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -186,18 +185,12 @@ const VehiclesAndDocuments = () => {
     console.log('Viewing details for document:', document);
   };
 
-  const handleRenewDocument = (document: any) => {
+  const handleEditDocument = (document: any) => {
     toast({
-      title: "Renewal Process Started",
-      description: `Initiating renewal for ${document.title}. You will be redirected to the renewal portal.`,
+      title: "Document Editor",
+      description: `Opening editor for ${document.title}. You can update the expiry date and other details.`,
     });
-    
-    setTimeout(() => {
-      toast({
-        title: "Redirecting...",
-        description: "Taking you to the renewal portal.",
-      });
-    }, 1500);
+    console.log('Editing document:', document);
   };
 
   const filteredVehicles = vehicles.filter(vehicle =>
@@ -375,7 +368,7 @@ const VehiclesAndDocuments = () => {
                   key={document.id}
                   document={document}
                   onViewDetails={handleViewDetails}
-                  onRenewDocument={handleRenewDocument}
+                  onEditDocument={handleEditDocument}
                 />
               ))
             )}
