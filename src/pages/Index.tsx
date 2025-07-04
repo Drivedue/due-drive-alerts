@@ -174,17 +174,21 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
-          {features.map((feature, index) => (
-            <Card key={index} className="text-center p-4">
-              <div className="mx-auto bg-blue-100 p-2 rounded-full w-fit mb-2">
-                <feature.icon className="h-4 w-4 text-[#0A84FF]" />
-              </div>
-              <h3 className="font-medium text-sm mb-1">{feature.title}</h3>
-              <p className="text-xs text-gray-600">{feature.description}</p>
-            </Card>
-          ))}
+        {/* Features List */}
+        <div className="mb-8 max-w-2xl mx-auto">
+          <ul className="space-y-3">
+            {features.map((feature, index) => (
+              <li key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                  <feature.icon className="h-4 w-4 text-[#0A84FF]" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm text-gray-900">{feature.title}</h3>
+                  <p className="text-xs text-gray-600">{feature.description}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Pricing Section */}
