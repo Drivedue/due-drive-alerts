@@ -1,13 +1,13 @@
+
 import { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Car, Search, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
 import VehicleDetailsForm from "@/components/VehicleDetailsForm";
-import VehicleCard from "@/components/VehicleCard";
 import AddDocumentForm from "@/components/AddDocumentForm";
+import GarageStats from "@/components/garage/GarageStats";
+import GarageSearch from "@/components/garage/GarageSearch";
+import VehiclesList from "@/components/garage/VehiclesList";
+import AddVehicleButton from "@/components/garage/AddVehicleButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -174,12 +174,6 @@ const MyGarage = () => {
     }
   };
 
-  const filteredVehicles = vehicles.filter(vehicle =>
-    vehicle.license_plate.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    vehicle.make.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    vehicle.model.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   if (loading) {
     return (
       <MobileLayout title="My Garage">
@@ -192,72 +186,18 @@ const MyGarage = () => {
 
   return (
     <MobileLayout title="My Garage">
-      {/* Stats Card */}
-      <div className="mb-6">
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="text-center">
-            <CardContent className="p-3">
-              <div className="text-2xl font-bold text-[#0A84FF]">{vehicles.length}</div>
-              <div className="text-xs text-gray-600">Vehicles</div>
-            </CardContent>
-          </Card>
-          <Card className="text-center">
-            <CardContent className="p-3">
-              <div className="text-2xl font-bold text-green-600">{documents.length}</div>
-              <div className="text-xs text-gray-600">Documents</div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <GarageStats vehicleCount={vehicles.length} documentCount={documents.length} />
+      <GarageSearch searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      
+      <VehiclesList
+        vehicles={vehicles}
+        searchQuery={searchQuery}
+        onAddVehicle={handleAddVehicle}
+        onEditVehicle={handleEditVehicle}
+        onAddDocument={handleAddDocument}
+      />
 
-      {/* Search Bar */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          placeholder="Search vehicles..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 bg-white"
-        />
-      </div>
-
-      {/* Vehicles List */}
-      <div className="space-y-4">
-        {filteredVehicles.length === 0 ? (
-          <Card className="bg-white shadow-sm">
-            <CardContent className="p-8 text-center">
-              <Car className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-900 mb-2">No vehicles found</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                {searchQuery ? "No vehicles match your search." : "You haven't added any vehicles yet."}
-              </p>
-              {!searchQuery && (
-                <Button onClick={handleAddVehicle} className="bg-[#0A84FF] hover:bg-[#0A84FF]/90">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Vehicle
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          filteredVehicles.map((vehicle) => (
-            <VehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-              onEdit={handleEditVehicle}
-              onAddDocument={handleAddDocument}
-            />
-          ))
-        )}
-      </div>
-
-      {/* Floating Add Button */}
-      <Button
-        className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-[#0A84FF] hover:bg-[#0A84FF]/90 shadow-lg"
-        onClick={handleAddVehicle}
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      <AddVehicleButton onAddVehicle={handleAddVehicle} />
 
       {/* Vehicle Details Form Modal */}
       {showVehicleForm && (

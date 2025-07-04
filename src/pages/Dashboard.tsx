@@ -114,6 +114,15 @@ const Dashboard = () => {
     fetchUserData();
   }, [user]);
 
+  // Refresh data every 30 seconds to keep dashboard updated
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchUserData();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   // Get upcoming renewals (expired and expiring soon documents)
   const upcomingRenewals = documents.filter(doc => 
     doc.status === 'expired' || doc.status === 'warning'
@@ -130,12 +139,12 @@ const Dashboard = () => {
 
   const handleEditDocument = (document: any) => {
     toast({
-      title: "Opening Document Editor",
-      description: `Editing ${document.title}. You can update the expiry date and other details.`,
+      title: "Opening My Garage",
+      description: `Navigate to My Garage to manage your documents.`,
     });
     
-    // Navigate to the garage page with the document tab selected
-    navigate('/garage?tab=documents');
+    // Navigate to the garage page
+    navigate('/garage');
   };
 
   const handleUpgradeSuccess = () => {
@@ -220,7 +229,7 @@ const Dashboard = () => {
                     size="sm"
                     onClick={() => handleEditDocument(renewal)}
                   >
-                    Edit Document
+                    Manage Documents
                   </Button>
                 </CardContent>
               </Card>

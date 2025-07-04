@@ -101,7 +101,12 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
           description: "Your Pro subscription is being activated...",
         });
         
-        // Verify payment
+        // Verify payment and update subscription status
+        setTimeout(() => {
+          onUpgradeSuccess?.();
+        }, 2000);
+        
+        // Navigate to callback URL for verification
         window.location.href = `${CALLBACK_URL}?reference=${response.reference}`;
       },
       onClose: function() {
@@ -132,36 +137,35 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
   }
 
   return (
-    <Card className="bg-gradient-to-r from-[#0A84FF] to-purple-600 text-white upgrade-section">
+    <Card className="bg-white border-2 border-gray-200 upgrade-section">
       <CardHeader>
-        <CardTitle className="text-center">Upgrade to Pro</CardTitle>
+        <CardTitle className="text-center text-gray-800">Upgrade to Pro</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <div className="flex items-center text-sm">
-            <Check className="h-4 w-4 mr-2" />
+          <div className="flex items-center text-sm text-gray-700">
+            <Check className="h-4 w-4 mr-2 text-green-600" />
             <span>SMS notifications</span>
           </div>
-          <div className="flex items-center text-sm">
-            <Check className="h-4 w-4 mr-2" />
+          <div className="flex items-center text-sm text-gray-700">
+            <Check className="h-4 w-4 mr-2 text-green-600" />
             <span>Manage up to 5 vehicles</span>
           </div>
-          <div className="flex items-center text-sm">
-            <Check className="h-4 w-4 mr-2" />
+          <div className="flex items-center text-sm text-gray-700">
+            <Check className="h-4 w-4 mr-2 text-green-600" />
             <span>Priority support</span>
           </div>
         </div>
         
         <div className="text-center">
-          <div className="text-2xl font-bold">₦4,999</div>
-          <div className="text-blue-100 text-sm">per year</div>
+          <div className="text-2xl font-bold text-gray-800">₦4,999</div>
+          <div className="text-gray-600 text-sm">per year</div>
         </div>
 
         <Button 
           onClick={handleUpgrade}
           disabled={isLoading}
-          variant="secondary" 
-          className="w-full"
+          className="w-full bg-[#0A84FF] hover:bg-[#0A84FF]/90"
         >
           {isLoading ? "Processing..." : "Upgrade Now"}
         </Button>
