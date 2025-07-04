@@ -1,16 +1,25 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Car, Search, Clock, AlertCircle, CheckCircle } from "lucide-react";
 import MobileLayout from "@/components/MobileLayout";
-import { useNavigate } from "react-router-dom";
+import AddVehicleForm from "@/components/AddVehicleForm";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const Vehicles = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  // Check if add parameter is present in URL
+  useEffect(() => {
+    if (searchParams.get('add') === 'true') {
+      setShowAddForm(true);
+    }
+  }, [searchParams]);
 
   // Mock vehicle data matching the reference design
   const vehicles = [
@@ -45,6 +54,25 @@ const Vehicles = () => {
       hasNotifications: false
     }
   ];
+
+  const handleAddVehicle = () => {
+    setShowAddForm(true);
+    // Update URL to reflect the add state
+    setSearchParams({ add: 'true' });
+  };
+
+  const handleCloseAddForm = () => {
+    setShowAddForm(false);
+    // Remove add parameter from URL
+    searchParams.delete('add');
+    setSearchParams(searchParams);
+  };
+
+  const handleSubmitVehicle = (vehicleData: any) => {
+    console.log('Adding vehicle:', vehicleData);
+    // TODO: Add actual vehicle creation logic here
+    // This would typically involve calling an API or updating a database
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -155,10 +183,18 @@ const Vehicles = () => {
       {/* Floating Add Button */}
       <Button
         className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-[#0A84FF] hover:bg-[#0A84FF]/90 shadow-lg"
-        onClick={() => navigate('/vehicles?add=true')}
+        onClick={handleAddVehicle}
       >
         <Car className="h-6 w-6" />
       </Button>
+
+      {/* Add Vehicle Form Modal */}
+      {showAddForm && (
+        <AddVehicleForm
+          onClose={handleCloseAddForm}
+          onSubmit={handleSubmitVehicle}
+        />
+      )}
     </MobileLayout>
   );
 };
