@@ -10,7 +10,7 @@ interface VehicleCardProps {
   onAddDocument: (vehicleId: string) => void;
 }
 
-const VehicleCard = ({ vehicle, onEdit }: VehicleCardProps) => {
+const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
   const getVehicleTypeColor = (type: string) => {
     switch (type?.toLowerCase()) {
       case 'private':
@@ -28,7 +28,12 @@ const VehicleCard = ({ vehicle, onEdit }: VehicleCardProps) => {
     <Card className="bg-white shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="font-semibold text-lg">{vehicle.license_plate}</div>
+          <div 
+            className="font-semibold text-lg text-[#0A84FF] cursor-pointer hover:underline" 
+            onClick={() => onAddDocument(vehicle.id)}
+          >
+            {vehicle.license_plate}
+          </div>
           <div className="flex gap-2">
             {vehicle.vehicle_type && (
               <Badge className={getVehicleTypeColor(vehicle.vehicle_type)}>

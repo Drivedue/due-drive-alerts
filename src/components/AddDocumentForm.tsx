@@ -19,7 +19,7 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
     title: '',
     document_type: '',
     document_number: '',
-    vehicle_id: '',
+    vehicle_id: vehicles.length === 1 ? vehicles[0].id : '',
     issue_date: '',
     expiry_date: '',
     notes: ''
@@ -90,12 +90,17 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
                 value={formData.document_number}
                 onChange={(e) => handleChange('document_number', e.target.value)}
                 placeholder="Enter document number"
+                required
               />
             </div>
             
             <div>
               <Label htmlFor="vehicle_id">Vehicle</Label>
-              <Select onValueChange={(value) => handleChange('vehicle_id', value)} required>
+              <Select 
+                onValueChange={(value) => handleChange('vehicle_id', value)} 
+                value={formData.vehicle_id}
+                required
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select vehicle" />
                 </SelectTrigger>
@@ -142,7 +147,7 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
             
             <div className="flex gap-2 pt-4">
               <Button type="submit" className="flex-1 bg-[#0A84FF] hover:bg-[#0A84FF]/90">
-                Add Document
+                Save Document
               </Button>
               <Button type="button" variant="outline" onClick={onClose} className="flex-1">
                 Cancel
