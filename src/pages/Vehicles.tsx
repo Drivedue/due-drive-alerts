@@ -1,18 +1,26 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Car, Search, Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { Car, Search, Clock, AlertCircle, CheckCircle, Plus } from "lucide-react";
 import MobileLayout from "@/components/MobileLayout";
 import AddVehicleForm from "@/components/AddVehicleForm";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Vehicles = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   // Check if add parameter is present in URL
   useEffect(() => {
@@ -21,57 +29,81 @@ const Vehicles = () => {
     }
   }, [searchParams]);
 
-  // Mock vehicle data matching the reference design
-  const vehicles = [
-    {
-      id: 1,
-      plateNumber: "ABC123",
-      status: "expiring",
-      expiryDate: "7/12/2025",
-      timeRemaining: "29 days left",
-      statusColor: "text-orange-600",
-      statusBg: "bg-orange-100",
-      hasNotifications: true
-    },
-    {
-      id: 2,
-      plateNumber: "XYZ789",
-      status: "expired",
-      expiryDate: "6/7/2025",
-      timeRemaining: "Expired 6 days ago",
-      statusColor: "text-red-600",
-      statusBg: "bg-red-100",
-      hasNotifications: false
-    },
-    {
-      id: 3,
-      plateNumber: "DEF456",
-      status: "valid",
-      expiryDate: "4/8/2026",
-      timeRemaining: "9 months left",
-      statusColor: "text-green-600",
-      statusBg: "bg-green-100",
-      hasNotifications: false
+  // Fetch vehicles from database
+  const fetchVehicles = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setVehicles(data || []);
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load vehicles",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [user]);
 
   const handleAddVehicle = () => {
     setShowAddForm(true);
-    // Update URL to reflect the add state
     setSearchParams({ add: 'true' });
   };
 
   const handleCloseAddForm = () => {
     setShowAddForm(false);
-    // Remove add parameter from URL
     searchParams.delete('add');
     setSearchParams(searchParams);
   };
 
-  const handleSubmitVehicle = (vehicleData: any) => {
-    console.log('Adding vehicle:', vehicleData);
-    // TODO: Add actual vehicle creation logic here
-    // This would typically involve calling an API or updating a database
+  const handleSubmitVehicle = async (vehicleData: any) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .insert({
+          user_id: user.id,
+          license_plate: vehicleData.plateNumber,
+          make: vehicleData.make,
+          model: vehicleData.model,
+          year: parseInt(vehicleData.year),
+          color: vehicleData.color || null
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Vehicle added successfully!",
+      });
+
+      // Refresh the vehicles list
+      fetchVehicles();
+      handleCloseAddForm();
+    } catch (error) {
+      console.error('Error adding vehicle:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add vehicle",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -101,14 +133,24 @@ const Vehicles = () => {
   };
 
   const filteredVehicles = vehicles.filter(vehicle =>
-    vehicle.plateNumber.toLowerCase().includes(searchQuery.toLowerCase())
+    vehicle.license_plate.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const stats = {
     total: vehicles.length,
-    expiring: vehicles.filter(v => v.status === 'expiring').length,
-    valid: vehicles.filter(v => v.status === 'valid').length
+    expiring: 0, // This would need document data to calculate
+    valid: vehicles.length
   };
+
+  if (loading) {
+    return (
+      <MobileLayout title="My Vehicles">
+        <div className="flex justify-center items-center h-32">
+          <div className="text-gray-500">Loading vehicles...</div>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout title="My Vehicles">
@@ -147,37 +189,54 @@ const Vehicles = () => {
 
       {/* Vehicle List */}
       <div className="space-y-4">
-        {filteredVehicles.map((vehicle) => (
-          <Card key={vehicle.id} className="bg-white shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-semibold text-lg">{vehicle.plateNumber}</div>
-                <Badge className={`${vehicle.statusBg} ${vehicle.statusColor} flex items-center gap-1`}>
-                  {getStatusIcon(vehicle.status)}
-                  {getStatusText(vehicle.status)}
-                </Badge>
-              </div>
-              
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Expires:</span>
-                  <span className="font-medium">{vehicle.expiryDate}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Time Remaining:</span>
-                  <span className="font-medium">{vehicle.timeRemaining}</span>
-                </div>
-              </div>
-
-              {vehicle.hasNotifications && (
-                <div className="mt-3 flex items-center gap-2 text-[#0A84FF] text-sm">
-                  <div className="w-2 h-2 bg-[#0A84FF] rounded-full"></div>
-                  <span>SMS Notifications</span>
-                </div>
+        {filteredVehicles.length === 0 ? (
+          <Card className="bg-white shadow-sm">
+            <CardContent className="p-8 text-center">
+              <Car className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="font-semibold text-gray-900 mb-2">No vehicles found</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                {searchQuery ? "No vehicles match your search." : "You haven't added any vehicles yet."}
+              </p>
+              {!searchQuery && (
+                <Button onClick={handleAddVehicle} className="bg-[#0A84FF] hover:bg-[#0A84FF]/90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Vehicle
+                </Button>
               )}
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          filteredVehicles.map((vehicle) => (
+            <Card key={vehicle.id} className="bg-white shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-semibold text-lg">{vehicle.license_plate}</div>
+                  <Badge className="bg-green-100 text-green-600 flex items-center gap-1">
+                    <CheckCircle className="h-4 w-4" />
+                    Active
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Make & Model:</span>
+                    <span className="font-medium">{vehicle.make} {vehicle.model}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Year:</span>
+                    <span className="font-medium">{vehicle.year}</span>
+                  </div>
+                  {vehicle.color && (
+                    <div className="flex justify-between">
+                      <span>Color:</span>
+                      <span className="font-medium">{vehicle.color}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Floating Add Button */}
