@@ -39,7 +39,7 @@ const Settings = () => {
       .single();
 
     if (subscriptionData) {
-      setUserPlan(subscriptionData.plan_code === 'pro' ? 'Pro' : 'Free');
+      setUserPlan('Pro');
     } else {
       setUserPlan('Free');
     }

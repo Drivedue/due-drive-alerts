@@ -49,8 +49,18 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
 
       if (data?.payment_url) {
         console.log('Redirecting to payment URL:', data.payment_url);
-        // Redirect to Paystack payment page
-        window.location.href = data.payment_url;
+        // Open Paystack payment page in new tab
+        const paymentWindow = window.open(data.payment_url, '_blank');
+        
+        if (!paymentWindow) {
+          // Fallback if popup is blocked
+          window.location.href = data.payment_url;
+        } else {
+          toast({
+            title: "Payment Page Opened",
+            description: "Complete your payment in the new tab to activate your Pro subscription.",
+          });
+        }
       } else {
         toast({
           title: "Upgrade Successful",
