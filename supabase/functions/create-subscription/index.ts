@@ -11,6 +11,8 @@ interface CreateSubscriptionRequest {
   email: string;
   plan: string;
   callback_url: string;
+  amount?: number;
+  public_key?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -19,12 +21,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, plan, callback_url }: CreateSubscriptionRequest = await req.json();
+    const { email, plan, callback_url, amount = 999900, public_key }: CreateSubscriptionRequest = await req.json();
     
     const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY');
     if (!paystackSecretKey) {
       throw new Error('Paystack secret key not configured');
     }
+
+    console.log('Processing subscription request:', { email, plan, amount, public_key });
 
     // Create customer first
     const customerResponse = await fetch('https://api.paystack.co/customer', {
@@ -45,61 +49,38 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(customerData.message || 'Failed to create customer');
     }
 
-    // Create subscription
-    const subscriptionResponse = await fetch('https://api.paystack.co/subscription', {
+    // Create payment transaction
+    const paymentResponse = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${paystackSecretKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        customer: customerData.data.customer_code,
+        email: email,
+        amount: amount, // Amount in kobo (₦9,999 = 999900 kobo)
         plan: plan,
-        authorization: customerData.data.customer_code,
+        callback_url: callback_url,
+        metadata: {
+          plan_type: plan,
+          subscription: true
+        }
       }),
     });
 
-    const subscriptionData = await subscriptionResponse.json();
-    console.log('Subscription creation response:', subscriptionData);
+    const paymentData = await paymentResponse.json();
+    console.log('Payment initialization response:', paymentData);
 
-    if (!subscriptionData.status) {
-      // If subscription creation fails, create a payment link instead
-      const paymentResponse = await fetch('https://api.paystack.co/transaction/initialize', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${paystackSecretKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          amount: plan === 'pro' ? 999900 : 0, // ₦9,999 for pro plan in kobo
-          plan: plan,
-          callback_url: callback_url,
-        }),
-      });
-
-      const paymentData = await paymentResponse.json();
-      console.log('Payment initialization response:', paymentData);
-
-      if (!paymentData.status) {
-        throw new Error(paymentData.message || 'Failed to initialize payment');
-      }
-
-      return new Response(JSON.stringify({
-        success: true,
-        payment_url: paymentData.data.authorization_url,
-        reference: paymentData.data.reference,
-        customer_code: customerData.data.customer_code,
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+    if (!paymentData.status) {
+      throw new Error(paymentData.message || 'Failed to initialize payment');
     }
 
     return new Response(JSON.stringify({
       success: true,
-      subscription: subscriptionData.data,
+      payment_url: paymentData.data.authorization_url,
+      reference: paymentData.data.reference,
       customer_code: customerData.data.customer_code,
+      access_code: paymentData.data.access_code,
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },

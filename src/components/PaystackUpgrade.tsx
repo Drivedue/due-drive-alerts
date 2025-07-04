@@ -17,6 +17,11 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Paystack configuration
+  const PAYSTACK_PUBLIC_KEY = "pk_test_fb056fa9b52e672a00eb6fa3cd9e5e0c73d96f2c";
+  const PRO_PLAN_PRICE = 999900; // ₦9,999 in kobo
+  const CALLBACK_URL = `${window.location.origin}/payment/callback`;
+
   const handleUpgrade = async () => {
     if (!user) {
       toast({
@@ -31,12 +36,16 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
 
     try {
       console.log('Starting upgrade process for user:', user.email);
+      console.log('Using Paystack public key:', PAYSTACK_PUBLIC_KEY);
+      console.log('Callback URL:', CALLBACK_URL);
       
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: {
           email: user.email,
           plan: 'pro',
-          callback_url: `${window.location.origin}/payment/callback`
+          callback_url: CALLBACK_URL,
+          amount: PRO_PLAN_PRICE,
+          public_key: PAYSTACK_PUBLIC_KEY
         }
       });
 
