@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Car, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -33,34 +33,22 @@ const Register = () => {
 
     // Basic validation
     if (!formData.fullName || !formData.email || !formData.phone || !formData.password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
       setIsLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive"
-      });
       setIsLoading(false);
       return;
     }
 
-    // Simulate registration
-    setTimeout(() => {
-      toast({
-        title: "Success!",
-        description: "Account created successfully. Welcome to DriveDue!",
-      });
-      setIsLoading(false);
+    const { error } = await signUp(formData.email, formData.password, formData.fullName, formData.phone);
+    
+    if (!error) {
       navigate('/dashboard');
-    }, 2000);
+    }
+    
+    setIsLoading(false);
   };
 
   return (

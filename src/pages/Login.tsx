@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Car, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -28,26 +28,18 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Basic validation
     if (!formData.email || !formData.password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
       setIsLoading(false);
       return;
     }
 
-    // Simulate login
-    setTimeout(() => {
-      toast({
-        title: "Welcome back!",
-        description: "Successfully signed in to DriveDue",
-      });
-      setIsLoading(false);
+    const { error } = await signIn(formData.email, formData.password);
+    
+    if (!error) {
       navigate('/dashboard');
-    }, 1500);
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -101,12 +93,6 @@ const Login = () => {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
-
-            <div className="text-center text-sm">
-              <Button variant="link" className="p-0 text-blue-600">
-                Forgot your password?
-              </Button>
-            </div>
 
             <div className="text-center text-sm">
               <span className="text-gray-600">Don't have an account? </span>
