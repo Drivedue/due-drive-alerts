@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,14 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Car, Calendar, Bell, AlertTriangle, Plus, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import MobileLayout from "@/components/MobileLayout";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
-  // Mock user data
-  const user = {
-    name: "John Doe",
+  // Get user's display name from auth metadata or email
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  
+  // Mock vehicle data - in real app this would come from database
+  const vehicleData = {
     plan: "Free",
     vehiclesCount: 3,
     maxVehicles: 5
@@ -37,10 +42,10 @@ const Dashboard = () => {
     <MobileLayout title="Dashboard">
       {/* Welcome Section */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-1">Welcome back, {user.name}!</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Welcome back, {userName}!</h2>
         <p className="text-gray-600 text-sm">Stay on top of your vehicle documents</p>
-        <Badge variant={user.plan === "Pro" ? "default" : "secondary"} className="mt-2">
-          {user.plan} Plan
+        <Badge variant={vehicleData.plan === "Pro" ? "default" : "secondary"} className="mt-2">
+          {vehicleData.plan} Plan
         </Badge>
       </div>
 
@@ -53,7 +58,7 @@ const Dashboard = () => {
                 <Car className="h-5 w-5 text-[#0A84FF]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-[#0A84FF]">{user.vehiclesCount}</div>
+                <div className="text-2xl font-bold text-[#0A84FF]">{vehicleData.vehiclesCount}</div>
                 <p className="text-xs text-gray-600">Vehicles</p>
               </div>
             </div>
