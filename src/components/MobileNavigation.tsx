@@ -9,7 +9,7 @@ const MobileNavigation = () => {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", isActive: location.pathname === "/dashboard" },
-    { icon: Plus, label: "Add", path: "/vehicles?add=true", isActive: false },
+    { icon: Car, label: "My Garage", path: "/garage", isActive: location.pathname === "/garage" || location.pathname === "/vehicles" || location.pathname === "/documents" },
     { icon: Settings, label: "Settings", path: "/settings", isActive: location.pathname === "/settings" },
     { icon: User, label: "Profile", path: "/profile", isActive: location.pathname === "/profile" }
   ];
