@@ -8,7 +8,7 @@ const MobileNavigation = () => {
   const location = useLocation();
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Vehicles", path: "/vehicles", isActive: location.pathname === "/vehicles" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", isActive: location.pathname === "/dashboard" },
     { icon: Plus, label: "Add", path: "/vehicles?add=true", isActive: false },
     { icon: Settings, label: "Settings", path: "/settings", isActive: location.pathname === "/settings" },
     { icon: User, label: "Profile", path: "/profile", isActive: location.pathname === "/profile" }
