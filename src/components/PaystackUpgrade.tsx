@@ -19,7 +19,7 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
 
   // Paystack configuration
   const PAYSTACK_PUBLIC_KEY = "pk_test_fb056fa9b52e672a00eb6fa3cd9e5e0c73d96f2c";
-  const PRO_PLAN_PRICE = 999900; // ₦9,999 in kobo
+  const PRO_PLAN_PRICE = 499900; // ₦4,999 in kobo
   const CALLBACK_URL = `${window.location.origin}/payment/callback`;
 
   const handleUpgrade = async () => {
@@ -57,18 +57,16 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
       }
 
       if (data?.payment_url) {
-        console.log('Redirecting to payment URL:', data.payment_url);
-        // Open Paystack payment page in new tab
-        const paymentWindow = window.open(data.payment_url, '_blank');
+        console.log('Opening Paystack popup for:', data.payment_url);
         
-        if (!paymentWindow) {
-          // Fallback if popup is blocked
-          window.location.href = data.payment_url;
+        // Load Paystack inline script if not already loaded
+        if (!window.PaystackPop) {
+          const script = document.createElement('script');
+          script.src = 'https://js.paystack.co/v1/inline.js';
+          script.onload = () => openPaystackPopup(data);
+          document.head.appendChild(script);
         } else {
-          toast({
-            title: "Payment Page Opened",
-            description: "Complete your payment in the new tab to activate your Pro subscription.",
-          });
+          openPaystackPopup(data);
         }
       } else {
         toast({
@@ -88,6 +86,35 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const openPaystackPopup = (paymentData: any) => {
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: user!.email,
+      amount: PRO_PLAN_PRICE,
+      ref: paymentData.reference,
+      callback: function(response: any) {
+        console.log('Payment successful:', response);
+        toast({
+          title: "Payment Successful",
+          description: "Your Pro subscription is being activated...",
+        });
+        
+        // Verify payment
+        window.location.href = `${CALLBACK_URL}?reference=${response.reference}`;
+      },
+      onClose: function() {
+        console.log('Payment popup closed');
+        toast({
+          title: "Payment Cancelled",
+          description: "Payment was cancelled. You can try again anytime.",
+          variant: "destructive"
+        });
+      }
+    });
+    
+    handler.openIframe();
   };
 
   if (userPlan === "Pro") {
@@ -126,8 +153,8 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
         </div>
         
         <div className="text-center">
-          <div className="text-2xl font-bold">₦9,999</div>
-          <div className="text-blue-100 text-sm">per month</div>
+          <div className="text-2xl font-bold">₦4,999</div>
+          <div className="text-blue-100 text-sm">per year</div>
         </div>
 
         <Button 
@@ -142,5 +169,12 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
     </Card>
   );
 };
+
+// Extend window object to include PaystackPop
+declare global {
+  interface Window {
+    PaystackPop: any;
+  }
+}
 
 export default PaystackUpgrade;

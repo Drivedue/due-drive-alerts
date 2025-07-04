@@ -21,7 +21,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, plan, callback_url, amount = 999900, public_key }: CreateSubscriptionRequest = await req.json();
+    const { email, plan, callback_url, amount = 499900, public_key }: CreateSubscriptionRequest = await req.json();
     
     const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY');
     if (!paystackSecretKey) {
@@ -58,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         email: email,
-        amount: amount, // Amount in kobo (₦9,999 = 999900 kobo)
+        amount: amount, // Amount in kobo (₦4,999 = 499900 kobo)
         callback_url: callback_url,
         metadata: {
           plan_type: plan,
