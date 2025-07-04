@@ -3,312 +3,187 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, ArrowLeft, Search, Filter, AlertTriangle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, FileText, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import MobileLayout from "@/components/MobileLayout";
 
 const Documents = () => {
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterType, setFilterType] = useState('all');
+  const [activeTab, setActiveTab] = useState('all');
 
   // Mock documents data
-  const allDocuments = [
+  const documents = [
     {
       id: 1,
-      vehicle: "Honda Civic",
-      plate: "ABC-123",
-      type: "Roadworthiness",
-      expiry: "2024-07-20",
-      daysLeft: 17,
-      status: "urgent"
-    },
-    {
-      id: 2,
-      vehicle: "Honda Civic",
-      plate: "ABC-123",
-      type: "License",
-      expiry: "2024-08-15",
+      vehicle: "ABC123",
+      type: "Driver's License",
+      expiryDate: "2024-08-15",
       daysLeft: 42,
       status: "warning"
     },
     {
-      id: 3,
-      vehicle: "Honda Civic",
-      plate: "ABC-123",
-      type: "Insurance",
-      expiry: "2024-12-31",
+      id: 2,
+      vehicle: "ABC123",
+      type: "Vehicle Insurance",
+      expiryDate: "2024-12-31",
       daysLeft: 180,
+      status: "safe"
+    },
+    {
+      id: 3,
+      vehicle: "XYZ789",
+      type: "Roadworthiness",
+      expiryDate: "2024-07-01",
+      daysLeft: -3,
+      status: "expired"
+    },
+    {
+      id: 4,
+      vehicle: "DEF456",
+      type: "Registration",
+      expiryDate: "2025-03-15",
+      daysLeft: 245,
       status: "safe"
     }
   ];
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'expired':
+        return <AlertCircle className="h-4 w-4" />;
+      case 'warning':
+        return <Clock className="h-4 w-4" />;
+      case 'safe':
+        return <CheckCircle className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'urgent': return 'text-red-600 bg-red-100 border-red-200';
-      case 'warning': return 'text-orange-600 bg-orange-100 border-orange-200';
-      case 'safe': return 'text-green-600 bg-green-100 border-green-200';
-      default: return 'text-gray-600 bg-gray-100 border-gray-200';
+      case 'expired': return 'text-red-600 bg-red-100';
+      case 'warning': return 'text-orange-600 bg-orange-100';
+      case 'safe': return 'text-green-600 bg-green-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    if (status === 'urgent') {
-      return <AlertTriangle className="h-4 w-4" />;
-    }
-    return <Calendar className="h-4 w-4" />;
+  const getStatusText = (status: string, daysLeft: number) => {
+    if (status === 'expired') return 'Expired';
+    if (status === 'warning') return `${daysLeft} days left`;
+    return 'Valid';
   };
 
-  // Filter documents based on search and filters
-  const filteredDocuments = allDocuments.filter(doc => {
-    const matchesSearch = doc.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.plate.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === 'all' || doc.status === filterStatus;
-    const matchesType = filterType === 'all' || doc.type === filterType;
-    
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  const filterDocuments = (filter: string) => {
+    switch (filter) {
+      case 'expired':
+        return documents.filter(doc => doc.status === 'expired');
+      case 'expiring':
+        return documents.filter(doc => doc.status === 'warning');
+      case 'valid':
+        return documents.filter(doc => doc.status === 'safe');
+      default:
+        return documents;
+    }
+  };
 
-  // Group documents by status
-  const urgentDocs = filteredDocuments.filter(doc => doc.status === 'urgent');
-  const warningDocs = filteredDocuments.filter(doc => doc.status === 'warning');
-  const safeDocs = filteredDocuments.filter(doc => doc.status === 'safe');
-
-  const documentTypes = [...new Set(allDocuments.map(doc => doc.type))];
+  const stats = {
+    total: documents.length,
+    expired: documents.filter(d => d.status === 'expired').length,
+    expiring: documents.filter(d => d.status === 'warning').length,
+    valid: documents.filter(d => d.status === 'safe').length
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Document Overview</h1>
-              <p className="text-gray-600">Track all your vehicle documents in one place</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search vehicles or documents..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="warning">Warning</SelectItem>
-                  <SelectItem value="safe">Safe</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {documentTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    <MobileLayout title="Documents">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-4 gap-2 mb-6">
+        <Card className="text-center">
+          <CardContent className="p-3">
+            <div className="text-lg font-bold text-blue-600">{stats.total}</div>
+            <div className="text-xs text-gray-600">Total</div>
           </CardContent>
         </Card>
-
-        {/* Summary Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="border-red-200 bg-red-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2 text-red-700">
-                <AlertTriangle className="h-5 w-5" />
-                Urgent
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-600">{urgentDocs.length}</div>
-              <p className="text-sm text-red-600">Expiring within 30 days</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-orange-200 bg-orange-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2 text-orange-700">
-                <Calendar className="h-5 w-5" />
-                Warning
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-600">{warningDocs.length}</div>
-              <p className="text-sm text-orange-600">Expiring within 60 days</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200 bg-green-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2 text-green-700">
-                <Calendar className="h-5 w-5" />
-                Safe
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600">{safeDocs.length}</div>
-              <p className="text-sm text-green-600">Valid for 60+ days</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Documents List */}
-        <div className="space-y-6">
-          {/* Urgent Documents */}
-          {urgentDocs.length > 0 && (
-            <div>
-              <h2 className="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Urgent - Expiring Soon
-              </h2>
-              <div className="grid gap-4">
-                {urgentDocs.map((doc) => (
-                  <Card key={doc.id} className="border-l-4 border-l-red-500 hover:shadow-lg transition-shadow">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          {getStatusIcon(doc.status)}
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{doc.vehicle} ({doc.plate})</h3>
-                            <p className="text-gray-600">{doc.type}</p>
-                            <p className="text-sm text-gray-500">Expires: {doc.expiry}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge className={getStatusColor(doc.status)}>
-                            {doc.daysLeft} days left
-                          </Badge>
-                          <div className="mt-2">
-                            <Button size="sm" className="bg-red-600 hover:bg-red-700">
-                              Renew Now
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Warning Documents */}
-          {warningDocs.length > 0 && (
-            <div>
-              <h2 className="text-xl font-bold text-orange-600 mb-4 flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Warning - Attention Needed
-              </h2>
-              <div className="grid gap-4">
-                {warningDocs.map((doc) => (
-                  <Card key={doc.id} className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          {getStatusIcon(doc.status)}
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{doc.vehicle} ({doc.plate})</h3>
-                            <p className="text-gray-600">{doc.type}</p>
-                            <p className="text-sm text-gray-500">Expires: {doc.expiry}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge className={getStatusColor(doc.status)}>
-                            {doc.daysLeft} days left
-                          </Badge>
-                          <div className="mt-2">
-                            <Button size="sm" variant="outline">
-                              Plan Renewal
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Safe Documents */}
-          {safeDocs.length > 0 && (
-            <div>
-              <h2 className="text-xl font-bold text-green-600 mb-4 flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Safe - Up to Date
-              </h2>
-              <div className="grid gap-4">
-                {safeDocs.map((doc) => (
-                  <Card key={doc.id} className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          {getStatusIcon(doc.status)}
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{doc.vehicle} ({doc.plate})</h3>
-                            <p className="text-gray-600">{doc.type}</p>
-                            <p className="text-sm text-gray-500">Expires: {doc.expiry}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge className={getStatusColor(doc.status)}>
-                            {doc.daysLeft} days left
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {filteredDocuments.length === 0 && (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No documents found</h3>
-              <p className="text-gray-600 mb-4">
-                {searchTerm || filterStatus !== 'all' || filterType !== 'all' 
-                  ? "Try adjusting your search or filters"
-                  : "Add your first vehicle to start tracking documents"
-                }
-              </p>
-              <Button onClick={() => navigate('/vehicles')} className="bg-blue-600 hover:bg-blue-700">
-                Manage Vehicles
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="text-center">
+          <CardContent className="p-3">
+            <div className="text-lg font-bold text-red-600">{stats.expired}</div>
+            <div className="text-xs text-gray-600">Expired</div>
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="p-3">
+            <div className="text-lg font-bold text-orange-600">{stats.expiring}</div>
+            <div className="text-xs text-gray-600">Expiring</div>
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="p-3">
+            <div className="text-lg font-bold text-green-600">{stats.valid}</div>
+            <div className="text-xs text-gray-600">Valid</div>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+
+      {/* Filter Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+          <TabsTrigger value="expired" className="text-xs">Expired</TabsTrigger>
+          <TabsTrigger value="expiring" className="text-xs">Expiring</TabsTrigger>
+          <TabsTrigger value="valid" className="text-xs">Valid</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab} className="mt-4">
+          <div className="space-y-3">
+            {filterDocuments(activeTab).map((document) => (
+              <Card key={document.id} className="bg-white">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="font-semibold text-sm">{document.type}</h3>
+                      <p className="text-xs text-gray-600">{document.vehicle}</p>
+                    </div>
+                    <Badge className={`${getStatusColor(document.status)} flex items-center gap-1`}>
+                      {getStatusIcon(document.status)}
+                      {getStatusText(document.status, document.daysLeft)}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-xs text-gray-600 mb-3">
+                    <span>Expires: {document.expiryDate}</span>
+                    <Calendar className="h-3 w-3" />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 text-xs">
+                      View Details
+                    </Button>
+                    <Button size="sm" className="flex-1 text-xs bg-blue-600 hover:bg-blue-700">
+                      Renew Now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {filterDocuments(activeTab).length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="font-semibold text-gray-900 mb-2">No documents found</h3>
+            <p className="text-gray-600 text-sm">
+              {activeTab === 'all' 
+                ? "You haven't added any documents yet."
+                : `No ${activeTab} documents found.`
+              }
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </MobileLayout>
   );
 };
 
