@@ -27,17 +27,17 @@ const Index = () => {
     {
       icon: Calendar,
       title: "Smart Reminders",
-      description: "Get notified 4 weeks, 3 weeks, 2 weeks, 1 week, and 1 day before expiry"
+      description: "Get notified before document expiry"
     },
     {
       icon: Bell,
       title: "Multi-Channel Alerts",
-      description: "Receive notifications via push, email, and SMS (Pro users)"
+      description: "Push, email, and SMS notifications"
     },
     {
       icon: Shield,
       title: "Never Miss Renewals",
-      description: "Stay compliant with automatic document tracking"
+      description: "Stay compliant with automatic tracking"
     }
   ];
 
@@ -45,31 +45,31 @@ const Index = () => {
     {
       name: "Free",
       price: "Free",
-      features: ["1 Vehicle", "Push Notifications", "Email Reminders", "Basic Support"],
+      features: ["1 Vehicle", "Push Notifications", "Email Reminders"],
       popular: false
     },
     {
       name: "Pro",
       price: "$9.99/month",
-      features: ["Up to 5 Vehicles", "SMS Notifications", "Email Reminders", "Push Notifications", "Priority Support"],
+      features: ["Up to 5 Vehicles", "SMS Notifications", "Priority Support"],
       popular: true
     },
     {
       name: "Team",
       price: "$29.99/month",
-      features: ["Unlimited Vehicles", "Team Management", "All Notification Types", "Advanced Analytics", "24/7 Support"],
+      features: ["Unlimited Vehicles", "Team Management", "24/7 Support"],
       popular: false
     }
   ];
 
   if (isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto px-4 py-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user.name}!</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user.name}!</h1>
               <p className="text-gray-600">Stay on top of your vehicle documents</p>
             </div>
             <div className="flex items-center gap-4">
@@ -81,66 +81,66 @@ const Index = () => {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="grid md:grid-cols-3 gap-4 mb-6">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Car className="h-5 w-5 text-blue-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Car className="h-4 w-4 text-[#0A84FF]" />
                   Vehicles
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-blue-600">{user.vehiclesCount}</div>
-                <p className="text-sm text-gray-600">Registered vehicles</p>
+                <div className="text-2xl font-bold text-[#0A84FF]">{user.vehiclesCount}</div>
+                <p className="text-xs text-gray-600">Registered vehicles</p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-orange-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-orange-600" />
                   Expiring Soon
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-orange-600">{user.documentsExpiringSoon}</div>
-                <p className="text-sm text-gray-600">Documents need attention</p>
+                <div className="text-2xl font-bold text-orange-600">{user.documentsExpiringSoon}</div>
+                <p className="text-xs text-gray-600">Documents need attention</p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-green-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-green-600" />
                   Notifications
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600">Active</div>
-                <p className="text-sm text-gray-600">Reminder system</p>
+                <div className="text-2xl font-bold text-green-600">Active</div>
+                <p className="text-xs text-gray-600">Reminder system</p>
               </CardContent>
             </Card>
           </div>
 
           {/* Quick Actions */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-4">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/vehicles')}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Car className="h-5 w-5" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Car className="h-4 w-4" />
                   Manage Vehicles
                 </CardTitle>
-                <CardDescription>Add new vehicles and update document information</CardDescription>
+                <CardDescription className="text-sm">Add new vehicles and update documents</CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/documents')}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
                   View Documents
                 </CardTitle>
-                <CardDescription>Check expiry dates and manage renewals</CardDescription>
+                <CardDescription className="text-sm">Check expiry dates and manage renewals</CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -150,23 +150,23 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center mb-6">
-            <div className="bg-blue-600 p-3 rounded-full">
-              <Car className="h-8 w-8 text-white" />
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center mb-4">
+            <div className="bg-[#0A84FF] p-2 rounded-full">
+              <Car className="h-6 w-6 text-white" />
             </div>
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Drive<span className="text-blue-600">Due</span>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Drive<span className="text-[#0A84FF]">Due</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Never miss another vehicle document renewal. Get timely reminders for licenses, insurance, roadworthiness, and more.
+          <p className="text-lg text-gray-600 mb-6 max-w-xl mx-auto">
+            Never miss another vehicle document renewal. Get timely reminders for licenses, insurance, and more.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/register')}>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button size="lg" className="bg-[#0A84FF] hover:bg-[#0A84FF]/90" onClick={() => navigate('/register')}>
               Get Started Free
             </Button>
             <Button size="lg" variant="outline" onClick={() => setIsLoggedIn(true)}>
@@ -176,52 +176,52 @@ const Index = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {features.map((feature, index) => (
             <Card key={index} className="text-center">
-              <CardHeader>
-                <div className="mx-auto bg-blue-100 p-3 rounded-full w-fit mb-4">
-                  <feature.icon className="h-6 w-6 text-blue-600" />
+              <CardHeader className="pb-2">
+                <div className="mx-auto bg-blue-100 p-2 rounded-full w-fit mb-2">
+                  <feature.icon className="h-5 w-5 text-[#0A84FF]" />
                 </div>
-                <CardTitle className="text-lg">{feature.title}</CardTitle>
+                <CardTitle className="text-base">{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">{feature.description}</p>
+                <p className="text-sm text-gray-600">{feature.description}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
         {/* Pricing Section */}
-        <div className="mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Choose Your Plan</h2>
-            <p className="text-gray-600">Select the perfect plan for your vehicle management needs</p>
+        <div className="mb-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Plan</h2>
+            <p className="text-gray-600">Select the perfect plan for your needs</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {plans.map((plan, index) => (
-              <Card key={index} className={`relative ${plan.popular ? 'border-blue-500 border-2' : ''}`}>
+              <Card key={index} className={`relative ${plan.popular ? 'border-[#0A84FF] border-2' : ''}`}>
                 {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600">
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#0A84FF]">
                     Most Popular
                   </Badge>
                 )}
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <div className="text-3xl font-bold text-blue-600">{plan.price}</div>
+                <CardHeader className="text-center pb-2">
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <div className="text-2xl font-bold text-[#0A84FF]">{plan.price}</div>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-3">
+                  <ul className="space-y-2 mb-4">
                     {plan.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-3 w-3 text-green-500" />
                         <span className="text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>
                   <Button 
-                    className={`w-full mt-6 ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                    className={`w-full ${plan.popular ? 'bg-[#0A84FF] hover:bg-[#0A84FF]/90' : ''}`}
                     variant={plan.popular ? "default" : "outline"}
                     onClick={() => navigate('/register')}
                   >
