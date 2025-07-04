@@ -3,14 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface AccountSettingsProps {
   userPlan: string;
 }
 
 const AccountSettings = ({ userPlan }: AccountSettingsProps) => {
-  const navigate = useNavigate();
+  const scrollToUpgrade = () => {
+    const upgradeSection = document.querySelector('.upgrade-section');
+    if (upgradeSection) {
+      upgradeSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <Card className="mb-6">
@@ -21,7 +25,7 @@ const AccountSettings = ({ userPlan }: AccountSettingsProps) => {
         <Button
           variant="ghost"
           className="w-full justify-between h-auto p-3"
-          onClick={() => navigate('/upgrade')}
+          onClick={scrollToUpgrade}
         >
           <div className="flex items-center gap-3">
             <CreditCard className="h-4 w-4 text-gray-600" />

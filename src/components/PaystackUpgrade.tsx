@@ -30,19 +30,25 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
     setIsLoading(true);
 
     try {
+      console.log('Starting upgrade process for user:', user.email);
+      
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: {
           email: user.email,
           plan: 'pro',
-          callback_url: `${window.location.origin}/settings`
+          callback_url: `${window.location.origin}/payment/callback`
         }
       });
 
+      console.log('Upgrade response:', data, error);
+
       if (error) {
+        console.error('Upgrade error:', error);
         throw error;
       }
 
-      if (data.payment_url) {
+      if (data?.payment_url) {
+        console.log('Redirecting to payment URL:', data.payment_url);
         // Redirect to Paystack payment page
         window.location.href = data.payment_url;
       } else {
@@ -57,7 +63,7 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
       console.error('Upgrade error:', error);
       toast({
         title: "Upgrade Failed",
-        description: error.message || "Failed to process upgrade",
+        description: error.message || "Failed to process upgrade. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -67,7 +73,7 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
 
   if (userPlan === "Pro") {
     return (
-      <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+      <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white upgrade-section">
         <CardContent className="p-4 text-center">
           <Crown className="h-8 w-8 mx-auto mb-2" />
           <h3 className="font-bold mb-2">Pro Member</h3>
@@ -80,7 +86,7 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
   }
 
   return (
-    <Card className="bg-gradient-to-r from-[#0A84FF] to-purple-600 text-white">
+    <Card className="bg-gradient-to-r from-[#0A84FF] to-purple-600 text-white upgrade-section">
       <CardHeader>
         <CardTitle className="text-center">Upgrade to Pro</CardTitle>
       </CardHeader>
