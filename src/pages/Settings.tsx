@@ -5,7 +5,7 @@ import NotificationSettings from "@/components/settings/NotificationSettings";
 import ReminderSchedule from "@/components/settings/ReminderSchedule";
 import AccountSettings from "@/components/settings/AccountSettings";
 import InformationSection from "@/components/settings/InformationSection";
-import UpgradePrompt from "@/components/settings/UpgradePrompt";
+import PaystackUpgrade from "@/components/PaystackUpgrade";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,38 +18,44 @@ const Settings = () => {
   const [userPlan, setUserPlan] = useState("Free");
   const [profile, setProfile] = useState<any>(null);
 
-  useEffect(() => {
-    if (user) {
-      // Fetch user profile and subscription data
-      const fetchUserData = async () => {
-        // Get profile
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        setProfile(profileData);
+  const fetchUserData = async () => {
+    if (!user) return;
 
-        // Get subscription
-        const { data: subscriptionData } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-          .single();
+    // Get profile
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    setProfile(profileData);
 
-        if (subscriptionData) {
-          setUserPlan(subscriptionData.plan_code === 'pro' ? 'Pro' : 'Free');
-        }
-      };
+    // Get subscription
+    const { data: subscriptionData } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single();
 
-      fetchUserData();
+    if (subscriptionData) {
+      setUserPlan(subscriptionData.plan_code === 'pro' ? 'Pro' : 'Free');
+    } else {
+      setUserPlan('Free');
     }
+  };
+
+  useEffect(() => {
+    fetchUserData();
   }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleUpgradeSuccess = () => {
+    // Refresh user data after successful upgrade
+    fetchUserData();
   };
 
   return (
@@ -93,7 +99,7 @@ const Settings = () => {
         </Card>
 
         <InformationSection />
-        <UpgradePrompt userPlan={userPlan} />
+        <PaystackUpgrade userPlan={userPlan} onUpgradeSuccess={handleUpgradeSuccess} />
       </MobileLayout>
     </ProtectedRoute>
   );
