@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
@@ -16,4 +17,25 @@ export function useIsMobile() {
   }, [])
 
   return !!isMobile
+}
+
+// Hook to detect if we're in a mobile viewport
+export function useMobileViewport() {
+  const [isMobileViewport, setIsMobileViewport] = React.useState(false)
+
+  React.useEffect(() => {
+    const checkViewport = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase())
+      const isSmallScreen = window.innerWidth <= 768
+      setIsMobileViewport(isMobileDevice || isSmallScreen)
+    }
+
+    checkViewport()
+    window.addEventListener('resize', checkViewport)
+    
+    return () => window.removeEventListener('resize', checkViewport)
+  }, [])
+
+  return isMobileViewport
 }
