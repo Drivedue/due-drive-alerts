@@ -18,7 +18,6 @@ const MyGarage = () => {
   const [loading, setLoading] = useState(true);
   const [showAddVehicle, setShowAddVehicle] = useState(false);
   const [showAddDocument, setShowAddDocument] = useState(false);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
   const [editingVehicle, setEditingVehicle] = useState<any>(null);
 
   const fetchVehicles = async () => {
@@ -59,8 +58,7 @@ const MyGarage = () => {
     setShowAddVehicle(true);
   };
 
-  const handleAddDocument = (vehicleId: string) => {
-    setSelectedVehicleId(vehicleId);
+  const handleAddDocument = () => {
     setShowAddDocument(true);
   };
 
@@ -72,7 +70,6 @@ const MyGarage = () => {
 
   const handleDocumentSubmitted = () => {
     setShowAddDocument(false);
-    setSelectedVehicleId("");
     // Refresh the page to update document counts
     fetchVehicles();
   };
@@ -112,11 +109,11 @@ const MyGarage = () => {
             </div>
           )}
           
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-6">
             <Button
               onClick={handleAddVehicle}
               size="sm"
-              className="bg-[#0A84FF] hover:bg-[#0A84FF]/90 text-white"
+              className="bg-[#0A84FF] hover:bg-[#0A84FF]/90 text-white px-4 py-2"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add Vehicle
@@ -134,7 +131,7 @@ const MyGarage = () => {
 
         {showAddDocument && (
           <AddDocumentForm
-            vehicleId={selectedVehicleId}
+            vehicles={vehicles}
             onClose={() => setShowAddDocument(false)}
             onSubmitted={handleDocumentSubmitted}
           />

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,41 +68,10 @@ const Vehicles = () => {
     setSearchParams(searchParams);
   };
 
-  const handleSubmitVehicle = async (vehicleData: any) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .insert({
-          user_id: user.id,
-          license_plate: vehicleData.plateNumber,
-          make: vehicleData.make,
-          model: vehicleData.model,
-          year: parseInt(vehicleData.year),
-          color: vehicleData.color || null
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Vehicle added successfully!",
-      });
-
-      // Refresh the vehicles list
-      fetchVehicles();
-      handleCloseAddForm();
-    } catch (error) {
-      console.error('Error adding vehicle:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add vehicle",
-        variant: "destructive"
-      });
-    }
+  const handleVehicleSubmitted = () => {
+    // Refresh the vehicles list
+    fetchVehicles();
+    handleCloseAddForm();
   };
 
   const getStatusIcon = (status: string) => {
@@ -251,7 +219,7 @@ const Vehicles = () => {
       {showAddForm && (
         <AddVehicleForm
           onClose={handleCloseAddForm}
-          onSubmit={handleSubmitVehicle}
+          onSubmitted={handleVehicleSubmitted}
         />
       )}
     </MobileLayout>

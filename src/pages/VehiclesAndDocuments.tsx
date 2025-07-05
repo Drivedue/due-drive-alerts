@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -109,76 +110,14 @@ const VehiclesAndDocuments = () => {
     setShowAddDocumentForm(true);
   };
 
-  const handleSubmitVehicle = async (vehicleData: any) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .insert({
-          user_id: user.id,
-          license_plate: vehicleData.plateNumber,
-          make: vehicleData.make,
-          model: vehicleData.model,
-          year: parseInt(vehicleData.year),
-          color: vehicleData.color || null
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Vehicle added successfully!",
-      });
-
-      fetchData();
-      setShowAddVehicleForm(false);
-    } catch (error) {
-      console.error('Error adding vehicle:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add vehicle",
-        variant: "destructive"
-      });
-    }
+  const handleVehicleSubmitted = () => {
+    fetchData();
+    setShowAddVehicleForm(false);
   };
 
-  const handleSubmitDocument = async (documentData: any) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('documents')
-        .insert({
-          user_id: user.id,
-          title: documentData.title,
-          document_type: documentData.document_type,
-          vehicle_id: documentData.vehicle_id,
-          expiry_date: documentData.expiry_date || null,
-          notes: documentData.notes || null
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Document added successfully!",
-      });
-
-      fetchData();
-      setShowAddDocumentForm(false);
-    } catch (error) {
-      console.error('Error adding document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add document",
-        variant: "destructive"
-      });
-    }
+  const handleDocumentSubmitted = () => {
+    fetchData();
+    setShowAddDocumentForm(false);
   };
 
   const handleViewDetails = (document: any) => {
@@ -388,7 +327,7 @@ const VehiclesAndDocuments = () => {
       {showAddVehicleForm && (
         <AddVehicleForm
           onClose={() => setShowAddVehicleForm(false)}
-          onSubmit={handleSubmitVehicle}
+          onSubmitted={handleVehicleSubmitted}
         />
       )}
 
@@ -396,7 +335,7 @@ const VehiclesAndDocuments = () => {
       {showAddDocumentForm && (
         <AddDocumentForm
           onClose={() => setShowAddDocumentForm(false)}
-          onSubmit={handleSubmitDocument}
+          onSubmitted={handleDocumentSubmitted}
           vehicles={vehicles}
         />
       )}
