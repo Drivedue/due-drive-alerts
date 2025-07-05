@@ -79,7 +79,7 @@ serve(async (req) => {
       )
     }
 
-    const { email, plan } = requestBody
+    const { email, amount, callback_url } = requestBody
 
     // Input validation
     if (!email || typeof email !== 'string') {
@@ -104,18 +104,6 @@ serve(async (req) => {
       )
     }
 
-    // Validate plan
-    const allowedPlans = ['pro']
-    if (!plan || !allowedPlans.includes(plan)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid plan specified' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
     // Get Paystack secret key
     const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')
     if (!paystackSecretKey) {
@@ -129,42 +117,37 @@ serve(async (req) => {
       )
     }
 
-    // Rate limiting check (simple implementation)
-    const { data: recentSubs } = await supabaseClient
-      .from('subscriptions')
-      .select('created_at')
-      .eq('user_id', user.id)
-      .gte('created_at', new Date(Date.now() - 60000).toISOString()) // Last minute
-
-    if (recentSubs && recentSubs.length > 3) {
-      return new Response(
-        JSON.stringify({ error: 'Too many subscription attempts. Please wait a moment.' }),
-        { 
-          status: 429, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    // Create a simple one-time payment instead of subscription
+    const paymentData = {
+      email: email,
+      amount: amount || 499900, // ₦4,999 in kobo
+      currency: 'NGN',
+      reference: `pro_upgrade_${Date.now()}_${user.id.slice(0, 8)}`,
+      callback_url: callback_url,
+      metadata: {
+        user_id: user.id,
+        plan: 'pro',
+        upgrade_type: 'annual'
+      }
     }
 
-    // Create customer with Paystack
-    const customerResponse = await fetch('https://api.paystack.co/customer', {
+    console.log('Creating Paystack transaction:', paymentData)
+
+    // Initialize transaction with Paystack
+    const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${paystackSecretKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email: email,
-        first_name: user.user_metadata?.full_name?.split(' ')[0] || 'User',
-        last_name: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-      }),
+      body: JSON.stringify(paymentData),
     })
 
-    if (!customerResponse.ok) {
-      const errorData = await customerResponse.json()
-      console.error('Paystack customer creation failed:', errorData)
+    if (!paystackResponse.ok) {
+      const errorData = await paystackResponse.json()
+      console.error('Paystack transaction initialization failed:', errorData)
       return new Response(
-        JSON.stringify({ error: 'Failed to create customer account' }),
+        JSON.stringify({ error: 'Failed to initialize payment' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -172,68 +155,31 @@ serve(async (req) => {
       )
     }
 
-    const customerData = await customerResponse.json()
+    const paystackData = await paystackResponse.json()
+    console.log('Paystack response:', paystackData)
 
-    // Create subscription with Paystack
-    const subscriptionResponse = await fetch('https://api.paystack.co/subscription', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${paystackSecretKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        customer: customerData.data.customer_code,
-        plan: 'PLN_pro_monthly',
-        authorization: customerData.data.customer_code,
-      }),
-    })
-
-    if (!subscriptionResponse.ok) {
-      const errorData = await subscriptionResponse.json()
-      console.error('Paystack subscription creation failed:', errorData)
-      return new Response(
-        JSON.stringify({ error: 'Failed to create subscription' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    const subscriptionData = await subscriptionResponse.json()
-
-    // Store subscription in database
+    // Store payment record in subscriptions table for tracking
     const { error: dbError } = await supabaseClient
       .from('subscriptions')
       .upsert({
         user_id: user.id,
-        paystack_customer_code: customerData.data.customer_code,
-        paystack_subscription_code: subscriptionData.data.subscription_code,
-        plan_code: plan,
-        status: 'active',
+        paystack_customer_code: paystackData.data.reference,
+        plan_code: 'pro',
+        status: 'pending',
         current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
       })
 
     if (dbError) {
       console.error('Database error:', dbError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to save subscription' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        data: {
-          authorization_url: subscriptionData.data.email_token,
-          access_code: subscriptionData.data.email_token,
-          reference: subscriptionData.data.subscription_code,
-        },
+        authorization_url: paystackData.data.authorization_url,
+        access_code: paystackData.data.access_code,
+        reference: paystackData.data.reference,
       }),
       { 
         status: 200, 
