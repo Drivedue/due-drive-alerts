@@ -1,15 +1,15 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Car, Calendar, Bell, AlertTriangle, Plus, Settings, Crown } from "lucide-react";
+import { Car, Calendar, Bell, AlertTriangle, Plus, Settings, Crown, Camera, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
+import DocumentEditModal from "@/components/DocumentEditModal";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -20,9 +20,16 @@ const Dashboard = () => {
   const [userPlan, setUserPlan] = useState("Free");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ vehicleCount: 0, documentCount: 0, expiredCount: 0 });
+  const [editingDocument, setEditingDocument] = useState<any>(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
   
   // Get user's display name from auth metadata or email
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+
+  // Paystack configuration
+  const PAYSTACK_PUBLIC_KEY = "pk_test_fb056fa9b52e672a00eb6fa3cd9e5e0c73d96f2c";
+  const PRO_PLAN_PRICE = 499900; // ₦4,999 in kobo
+  const CALLBACK_URL = `${window.location.origin}/payment/callback`;
 
   // Optimized data fetching with parallel requests
   const fetchDashboardData = async () => {
@@ -126,6 +133,104 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [user]);
 
+  const handleUpgrade = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to upgrade your plan",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUpgrading(true);
+
+    try {
+      console.log('Starting upgrade process for user:', user.email);
+      
+      const { data, error } = await supabase.functions.invoke('create-subscription', {
+        body: {
+          email: user.email,
+          plan: 'pro',
+          callback_url: CALLBACK_URL,
+          amount: PRO_PLAN_PRICE,
+          public_key: PAYSTACK_PUBLIC_KEY
+        }
+      });
+
+      console.log('Upgrade response:', data, error);
+
+      if (error) {
+        console.error('Upgrade error:', error);
+        throw error;
+      }
+
+      if (data?.payment_url) {
+        console.log('Opening Paystack popup for:', data.payment_url);
+        
+        // Load Paystack inline script if not already loaded
+        if (!window.PaystackPop) {
+          const script = document.createElement('script');
+          script.src = 'https://js.paystack.co/v1/inline.js';
+          script.onload = () => openPaystackPopup(data);
+          document.head.appendChild(script);
+        } else {
+          openPaystackPopup(data);
+        }
+      } else {
+        toast({
+          title: "Upgrade Successful",
+          description: "Your subscription has been activated!",
+        });
+        fetchDashboardData();
+      }
+
+    } catch (error: any) {
+      console.error('Upgrade error:', error);
+      toast({
+        title: "Upgrade Failed",
+        description: error.message || "Failed to process upgrade. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
+  const openPaystackPopup = (paymentData: any) => {
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: user!.email,
+      amount: PRO_PLAN_PRICE,
+      ref: paymentData.reference,
+      callback: function(response: any) {
+        console.log('Payment successful:', response);
+        toast({
+          title: "Payment Successful",
+          description: "Your Pro subscription is being activated...",
+        });
+        
+        // Verify payment and update subscription status
+        setTimeout(() => {
+          fetchDashboardData();
+        }, 2000);
+        
+        // Navigate to callback URL for verification
+        window.location.href = `${CALLBACK_URL}?reference=${response.reference}`;
+      },
+      onClose: function() {
+        console.log('Payment popup closed');
+        toast({
+          title: "Payment Cancelled",
+          description: "Payment was cancelled. You can try again anytime.",
+          variant: "destructive"
+        });
+      }
+    });
+    
+    handler.openIframe();
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'expired': return 'text-red-600 bg-red-100';
@@ -135,12 +240,20 @@ const Dashboard = () => {
     }
   };
 
-  const handleManageDocuments = () => {
-    navigate('/garage');
+  const handleDocumentEdit = (document: any) => {
+    setEditingDocument(document);
   };
 
-  const handleUpgradeClick = () => {
-    navigate('/settings');
+  const handleDocumentUpdate = () => {
+    setEditingDocument(null);
+    fetchDashboardData(); // Refresh data after update
+  };
+
+  const handleVehicleImageUpload = () => {
+    toast({
+      title: "Coming Soon",
+      description: "Vehicle picture upload feature will be available soon!",
+    });
   };
 
   if (loading) {
@@ -155,28 +268,31 @@ const Dashboard = () => {
 
   return (
     <MobileLayout title="Dashboard">
-      {/* Header with Pro Button */}
+      {/* Header with Plan Badge and Upgrade Button */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Welcome back, {userName}!</h2>
             <p className="text-gray-600 text-sm">Stay on top of your vehicle documents</p>
           </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <Badge variant={userPlan === "Pro" ? "default" : "secondary"} className="mt-1">
+            {userPlan} Plan
+          </Badge>
           {userPlan === "Free" && (
             <Button
               variant="outline"
               size="sm"
-              onClick={handleUpgradeClick}
+              onClick={handleUpgrade}
+              disabled={isUpgrading}
               className="flex items-center gap-2 text-[#0A84FF] border-[#0A84FF] hover:bg-[#0A84FF]/10"
             >
               <Crown className="h-4 w-4" />
-              Upgrade to Pro
+              {isUpgrading ? "Processing..." : "Upgrade to Pro"}
             </Button>
           )}
         </div>
-        <Badge variant={userPlan === "Pro" ? "default" : "secondary"} className="mt-1">
-          {userPlan} Plan
-        </Badge>
       </div>
 
       {/* Quick Stats */}
@@ -244,12 +360,12 @@ const Dashboard = () => {
                   </div>
                   <p className="text-gray-600 text-sm mb-3">{renewal.title} renewal {renewal.status === 'expired' ? 'overdue' : 'due'}</p>
                   <Button 
-                    className="w-full" 
+                    className="w-full text-xs" 
                     variant="outline" 
                     size="sm"
-                    onClick={handleManageDocuments}
+                    onClick={() => handleDocumentEdit(renewal)}
                   >
-                    Manage Documents
+                    If renewed, update with new expiry date!
                   </Button>
                 </CardContent>
               </Card>
@@ -258,24 +374,44 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/garage')}>
-          <CardContent className="p-4 text-center">
-            <Car className="h-8 w-8 mx-auto mb-2 text-[#0A84FF]" />
-            <h4 className="font-semibold text-sm">My Garage</h4>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/garage')}>
-          <CardContent className="p-4 text-center">
-            <Calendar className="h-8 w-8 mx-auto mb-2 text-green-600" />
-            <h4 className="font-semibold text-sm">Documents</h4>
+      {/* Vehicle Picture Upload Card */}
+      <div className="mb-6">
+        <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-dashed border-gray-300" onClick={handleVehicleImageUpload}>
+          <CardContent className="p-6 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="bg-blue-50 p-4 rounded-full">
+                <Camera className="h-8 w-8 text-[#0A84FF]" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">Upload Vehicle Picture</h4>
+                <p className="text-sm text-gray-600">Add photos of your vehicles for easy identification</p>
+              </div>
+              <Button variant="outline" size="sm" className="mt-2">
+                <Upload className="h-4 w-4 mr-2" />
+                Choose Photo
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Document Edit Modal */}
+      {editingDocument && (
+        <DocumentEditModal
+          document={editingDocument}
+          onClose={() => setEditingDocument(null)}
+          onUpdate={handleDocumentUpdate}
+        />
+      )}
     </MobileLayout>
   );
 };
+
+// Extend window object to include PaystackPop
+declare global {
+  interface Window {
+    PaystackPop: any;
+  }
+}
 
 export default Dashboard;
