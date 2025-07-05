@@ -1,46 +1,43 @@
 
-import { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 import MobileLayout from "@/components/MobileLayout";
-import VehicleDetailsForm from "@/components/VehicleDetailsForm";
+import { Button } from "@/components/ui/button";
+import VehicleCard from "@/components/VehicleCard";
+import AddVehicleForm from "@/components/AddVehicleForm";
 import AddDocumentForm from "@/components/AddDocumentForm";
-import GarageStats from "@/components/garage/GarageStats";
-import GarageSearch from "@/components/garage/GarageSearch";
-import VehiclesList from "@/components/garage/VehiclesList";
-import AddVehicleButton from "@/components/garage/AddVehicleButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { Plus, Car } from "lucide-react";
 
 const MyGarage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showVehicleForm, setShowVehicleForm] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState<any>(null);
-  const [showDocumentForm, setShowDocumentForm] = useState(false);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
-  const { toast } = useToast();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddVehicle, setShowAddVehicle] = useState(false);
+  const [showAddDocument, setShowAddDocument] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
+  const [editingVehicle, setEditingVehicle] = useState<any>(null);
 
   const fetchVehicles = async () => {
     if (!user) return;
-    
+
     try {
-      setLoading(true);
-      
-      const { data: vehiclesData, error: vehiclesError } = await supabase
+      const { data, error } = await supabase
         .from('vehicles')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      if (vehiclesError) throw vehiclesError;
-      setVehicles(vehiclesData || []);
+      if (error) throw error;
+      setVehicles(data || []);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       toast({
         title: "Error",
-        description: "Failed to load vehicles",
+        description: "Failed to fetch vehicles. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -48,178 +45,102 @@ const MyGarage = () => {
     }
   };
 
-  const fetchDocuments = async () => {
-    if (!user) return;
-    
-    try {
-      const { data: documentsData, error: documentsError } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (documentsError) throw documentsError;
-      setDocuments(documentsData || []);
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-    }
-  };
-
   useEffect(() => {
     fetchVehicles();
-    fetchDocuments();
   }, [user]);
 
   const handleAddVehicle = () => {
     setEditingVehicle(null);
-    setShowVehicleForm(true);
+    setShowAddVehicle(true);
   };
 
   const handleEditVehicle = (vehicle: any) => {
     setEditingVehicle(vehicle);
-    setShowVehicleForm(true);
+    setShowAddVehicle(true);
   };
 
   const handleAddDocument = (vehicleId: string) => {
     setSelectedVehicleId(vehicleId);
-    setShowDocumentForm(true);
+    setShowAddDocument(true);
   };
 
-  const handleSubmitDocument = async (documentData: any) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('documents')
-        .insert({
-          user_id: user.id,
-          vehicle_id: documentData.vehicle_id,
-          title: documentData.title,
-          document_type: documentData.document_type,
-          document_number: documentData.document_number,
-          issue_date: documentData.issue_date || null,
-          expiry_date: documentData.expiry_date || null,
-          notes: documentData.notes || null
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Document added successfully!",
-      });
-
-      // Refresh both vehicles and documents to trigger updates
-      await fetchDocuments();
-      await fetchVehicles();
-      
-      setShowDocumentForm(false);
-      setSelectedVehicleId('');
-    } catch (error) {
-      console.error('Error adding document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add document",
-        variant: "destructive"
-      });
-    }
+  const handleVehicleSubmitted = () => {
+    setShowAddVehicle(false);
+    setEditingVehicle(null);
+    fetchVehicles();
   };
 
-  const handleSubmitVehicle = async (vehicleData: any) => {
-    if (!user) return;
-
-    try {
-      const vehiclePayload = {
-        user_id: user.id,
-        license_plate: vehicleData.plateNumber,
-        vehicle_type: vehicleData.vehicleType,
-        make: vehicleData.make,
-        model: vehicleData.model,
-        year: parseInt(vehicleData.year),
-        owner_email: vehicleData.ownerEmail || null,
-        color: vehicleData.color || null
-      };
-
-      if (editingVehicle) {
-        // Update existing vehicle
-        const { error } = await supabase
-          .from('vehicles')
-          .update(vehiclePayload)
-          .eq('id', editingVehicle.id);
-
-        if (error) throw error;
-      } else {
-        // Create new vehicle
-        const { error } = await supabase
-          .from('vehicles')
-          .insert(vehiclePayload);
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Success",
-        description: `Vehicle ${editingVehicle ? 'updated' : 'added'} successfully!`,
-      });
-
-      fetchVehicles();
-      setShowVehicleForm(false);
-      setEditingVehicle(null);
-    } catch (error) {
-      console.error('Error saving vehicle:', error);
-      toast({
-        title: "Error",
-        description: `Failed to ${editingVehicle ? 'update' : 'add'} vehicle`,
-        variant: "destructive"
-      });
-    }
+  const handleDocumentSubmitted = () => {
+    setShowAddDocument(false);
+    setSelectedVehicleId("");
+    // Refresh the page to update document counts
+    fetchVehicles();
   };
 
   if (loading) {
     return (
-      <MobileLayout title="My Garage">
-        <div className="flex justify-center items-center h-32">
-          <div className="text-gray-500">Loading...</div>
-        </div>
-      </MobileLayout>
+      <ProtectedRoute>
+        <MobileLayout title="My Garage">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-gray-500">Loading vehicles...</div>
+          </div>
+        </MobileLayout>
+      </ProtectedRoute>
     );
   }
 
   return (
-    <MobileLayout title="My Garage">
-      <GarageStats vehicleCount={vehicles.length} documentCount={documents.length} />
-      <GarageSearch searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-      
-      <VehiclesList
-        vehicles={vehicles}
-        searchQuery={searchQuery}
-        onAddVehicle={handleAddVehicle}
-        onEditVehicle={handleEditVehicle}
-        onAddDocument={handleAddDocument}
-      />
+    <ProtectedRoute>
+      <MobileLayout title="My Garage">
+        <div className="space-y-3">
+          {vehicles.length === 0 ? (
+            <div className="text-center py-12">
+              <Car className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No vehicles</h3>
+              <p className="mt-1 text-sm text-gray-500">Get started by adding your first vehicle.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {vehicles.map((vehicle) => (
+                <VehicleCard
+                  key={vehicle.id}
+                  vehicle={vehicle}
+                  onEdit={handleEditVehicle}
+                  onAddDocument={handleAddDocument}
+                />
+              ))}
+            </div>
+          )}
+          
+          <div className="flex justify-center pt-4">
+            <Button
+              onClick={handleAddVehicle}
+              size="sm"
+              className="bg-[#0A84FF] hover:bg-[#0A84FF]/90 text-white"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Vehicle
+            </Button>
+          </div>
+        </div>
 
-      <AddVehicleButton onAddVehicle={handleAddVehicle} />
+        {showAddVehicle && (
+          <AddVehicleForm
+            vehicle={editingVehicle}
+            onClose={() => setShowAddVehicle(false)}
+            onSubmitted={handleVehicleSubmitted}
+          />
+        )}
 
-      {/* Vehicle Details Form Modal */}
-      {showVehicleForm && (
-        <VehicleDetailsForm
-          onClose={() => setShowVehicleForm(false)}
-          onSubmit={handleSubmitVehicle}
-          vehicle={editingVehicle}
-        />
-      )}
-
-      {/* Add Document Form Modal */}
-      {showDocumentForm && (
-        <AddDocumentForm
-          onClose={() => {
-            setShowDocumentForm(false);
-            setSelectedVehicleId('');
-          }}
-          onSubmit={handleSubmitDocument}
-          vehicles={vehicles.filter(v => v.id === selectedVehicleId)}
-        />
-      )}
-    </MobileLayout>
+        {showAddDocument && (
+          <AddDocumentForm
+            vehicleId={selectedVehicleId}
+            onClose={() => setShowAddDocument(false)}
+            onSubmitted={handleDocumentSubmitted}
+          />
+        )}
+      </MobileLayout>
+    </ProtectedRoute>
   );
 };
 

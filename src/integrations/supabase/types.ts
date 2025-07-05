@@ -68,23 +68,35 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          email_notifications: boolean | null
           full_name: string | null
           id: string
           phone: string | null
+          push_notifications: boolean | null
+          reminder_days: number | null
+          sms_notifications: boolean | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          email_notifications?: boolean | null
           full_name?: string | null
           id: string
           phone?: string | null
+          push_notifications?: boolean | null
+          reminder_days?: number | null
+          sms_notifications?: boolean | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          email_notifications?: boolean | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          push_notifications?: boolean | null
+          reminder_days?: number | null
+          sms_notifications?: boolean | null
           updated_at?: string
         }
         Relationships: []

@@ -72,75 +72,79 @@ const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
 
   const getDocumentNumberColor = (index: number) => {
     const colors = [
-      'bg-blue-500 text-white',
-      'bg-green-500 text-white',
-      'bg-purple-500 text-white',
-      'bg-red-500 text-white',
-      'bg-yellow-500 text-white',
-      'bg-indigo-500 text-white',
-      'bg-pink-500 text-white',
-      'bg-teal-500 text-white'
+      'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md',
+      'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md',
+      'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md',
+      'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md',
+      'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-md',
+      'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md',
+      'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-md',
+      'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md'
     ];
     return colors[index % colors.length];
   };
 
+  const getDocumentHeaderNumberColor = () => {
+    return 'bg-gradient-to-r from-orange-500 to-red-500 text-white';
+  };
+
   return (
     <Card className="bg-white shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between mb-2">
           <div 
-            className="font-semibold text-lg text-[#0A84FF] cursor-pointer hover:underline" 
+            className="font-semibold text-base text-[#0A84FF] cursor-pointer hover:underline" 
             onClick={() => onAddDocument(vehicle.id)}
           >
             {vehicle.license_plate}
           </div>
           <div className="flex gap-2">
             {vehicle.vehicle_type && (
-              <Badge className={getVehicleTypeColor(vehicle.vehicle_type)}>
+              <Badge className={`text-xs ${getVehicleTypeColor(vehicle.vehicle_type)}`}>
                 {vehicle.vehicle_type.charAt(0).toUpperCase() + vehicle.vehicle_type.slice(1)}
               </Badge>
             )}
-            <Button onClick={() => onEdit(vehicle)} variant="outline" size="sm">
-              <Edit className="h-4 w-4" />
+            <Button onClick={() => onEdit(vehicle)} variant="outline" size="sm" className="h-7 px-2">
+              <Edit className="h-3 w-3" />
             </Button>
           </div>
         </div>
         
-        <div className="space-y-2 text-sm text-gray-600">
+        <div className="space-y-1 text-xs text-gray-600 mb-3">
           <div className="flex justify-between">
             <span>Make & Model:</span>
-            <span className="font-medium">{vehicle.make} {vehicle.model}</span>
+            <span className="font-medium text-xs">{vehicle.make} {vehicle.model}</span>
           </div>
           <div className="flex justify-between">
             <span>Year:</span>
-            <span className="font-medium">{vehicle.year}</span>
+            <span className="font-medium text-xs">{vehicle.year}</span>
           </div>
           {vehicle.color && (
             <div className="flex justify-between">
               <span>Color:</span>
-              <span className="font-medium">{vehicle.color}</span>
+              <span className="font-medium text-xs">{vehicle.color}</span>
             </div>
           )}
           {vehicle.owner_email && (
             <div className="flex justify-between">
               <span>Owner Email:</span>
-              <span className="font-medium text-xs">{vehicle.owner_email}</span>
+              <span className="font-medium text-xs break-all">{vehicle.owner_email}</span>
             </div>
           )}
         </div>
 
         {/* Documents Section */}
-        <div className="mt-4 pt-3 border-t border-gray-100">
+        <div className="pt-2 border-t border-gray-100">
           <Collapsible open={isDocumentsOpen} onOpenChange={setIsDocumentsOpen}>
             <CollapsibleTrigger className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">Documents</span>
-                <Badge variant="secondary" className="text-xs">
+                <FileText className="h-3 w-3 text-gray-500" />
+                <span className="text-xs font-medium text-gray-700">Documents</span>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${getDocumentHeaderNumberColor()}`}>
                   {documents.length}
-                </Badge>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -148,26 +152,26 @@ const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
                   }}
                   variant="ghost"
                   size="sm"
-                  className="text-[#0A84FF] hover:text-[#0A84FF]/80 text-xs"
+                  className="text-[#0A84FF] hover:text-[#0A84FF]/80 text-xs h-6 px-2"
                 >
-                  Add Document
+                  Add
                 </Button>
-                <ChevronDown className={`h-4 w-4 transition-transform ${isDocumentsOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-3 w-3 transition-transform ${isDocumentsOpen ? 'rotate-180' : ''}`} />
               </div>
             </CollapsibleTrigger>
             
-            <CollapsibleContent className="mt-3">
+            <CollapsibleContent className="mt-2">
               {loadingDocuments ? (
-                <div className="text-xs text-gray-500">Loading documents...</div>
+                <div className="text-xs text-gray-500 p-2">Loading documents...</div>
               ) : documents.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {documents.map((doc, index) => (
-                    <div key={doc.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getDocumentNumberColor(index)}`}>
+                    <div key={doc.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${getDocumentNumberColor(index)}`}>
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-800">
+                        <div className="text-xs font-medium text-gray-800">
                           {getDocumentTypeLabel(doc.document_type)}
                         </div>
                         {doc.expiry_date && (
