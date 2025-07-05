@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,15 @@ const VehiclesAndDocuments = () => {
   const [showAddDocumentForm, setShowAddDocumentForm] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Input validation function
+  const validateInput = (input: string, type: 'search' | 'general'): boolean => {
+    if (type === 'search') {
+      // Allow alphanumeric, spaces, and common punctuation for search
+      return /^[a-zA-Z0-9\s\-_.]*$/.test(input);
+    }
+    return true;
+  };
 
   // Fetch both vehicles and documents
   const fetchData = async () => {
@@ -109,34 +119,9 @@ const VehiclesAndDocuments = () => {
     setShowAddDocumentForm(true);
   };
 
-  const handleVehicleSubmitted = async (vehicleData: any) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('vehicles')
-        .insert({
-          ...vehicleData,
-          user_id: user.id
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Vehicle added successfully!",
-      });
-
-      fetchData();
-      setShowAddVehicleForm(false);
-    } catch (error) {
-      console.error('Error adding vehicle:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add vehicle. Please try again.",
-        variant: "destructive"
-      });
-    }
+  const handleVehicleSubmitted = () => {
+    fetchData();
+    setShowAddVehicleForm(false);
   };
 
   const handleDocumentSubmit = async (documentData: any) => {
@@ -179,6 +164,14 @@ const VehiclesAndDocuments = () => {
       description: `Opening editor for ${document.title}. You can update the expiry date and other details.`,
     });
     console.log('Editing document:', document);
+  };
+
+  // Secure search with input validation
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (validateInput(value, 'search')) {
+      setSearchQuery(value);
+    }
   };
 
   const filteredVehicles = vehicles.filter(vehicle =>
@@ -257,8 +250,9 @@ const VehiclesAndDocuments = () => {
         <Input
           placeholder={`Search ${activeTab === 'vehicles' ? 'vehicles' : 'documents'}...`}
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={handleSearchChange}
           className="pl-10 bg-white"
+          maxLength={50}
         />
       </div>
 

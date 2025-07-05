@@ -26,19 +26,78 @@ const AddVehicleForm = ({ vehicle, onClose, onSubmitted }: AddVehicleFormProps) 
     color: vehicle?.color || ''
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Input validation functions
+  const validatePlateNumber = (plate: string): boolean => {
+    return /^[A-Za-z0-9\-\s]{1,20}$/.test(plate);
+  };
+
+  const validateMakeModel = (value: string): boolean => {
+    return /^[A-Za-z0-9\s\-\.]{1,50}$/.test(value);
+  };
+
+  const validateYear = (year: string): boolean => {
+    const yearNum = parseInt(year);
+    const currentYear = new Date().getFullYear();
+    return yearNum >= 1900 && yearNum <= currentYear + 1;
+  };
+
+  const validateColor = (color: string): boolean => {
+    return color === '' || /^[A-Za-z\s]{1,30}$/.test(color);
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.plateNumber.trim()) {
+      newErrors.plateNumber = 'License plate is required';
+    } else if (!validatePlateNumber(formData.plateNumber)) {
+      newErrors.plateNumber = 'Invalid license plate format';
+    }
+
+    if (!formData.make.trim()) {
+      newErrors.make = 'Make is required';
+    } else if (!validateMakeModel(formData.make)) {
+      newErrors.make = 'Invalid make format';
+    }
+
+    if (!formData.model.trim()) {
+      newErrors.model = 'Model is required';
+    } else if (!validateMakeModel(formData.model)) {
+      newErrors.model = 'Invalid model format';
+    }
+
+    if (!formData.year.trim()) {
+      newErrors.year = 'Year is required';
+    } else if (!validateYear(formData.year)) {
+      newErrors.year = 'Year must be between 1900 and next year';
+    }
+
+    if (formData.color && !validateColor(formData.color)) {
+      newErrors.color = 'Invalid color format';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     try {
       const vehicleData = {
-        license_plate: formData.plateNumber,
-        make: formData.make,
-        model: formData.model,
+        license_plate: formData.plateNumber.trim(),
+        make: formData.make.trim(),
+        model: formData.model.trim(),
         year: parseInt(formData.year),
-        color: formData.color,
+        color: formData.color.trim() || null,
         user_id: user.id
       };
 
@@ -80,6 +139,10 @@ const AddVehicleForm = ({ vehicle, onClose, onSubmitted }: AddVehicleFormProps) 
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   return (
@@ -100,8 +163,13 @@ const AddVehicleForm = ({ vehicle, onClose, onSubmitted }: AddVehicleFormProps) 
                 value={formData.plateNumber}
                 onChange={(e) => handleChange('plateNumber', e.target.value)}
                 placeholder="ABC123"
+                maxLength={20}
                 required
+                className={errors.plateNumber ? 'border-red-500' : ''}
               />
+              {errors.plateNumber && (
+                <p className="text-red-500 text-sm mt-1">{errors.plateNumber}</p>
+              )}
             </div>
             
             <div>
@@ -111,8 +179,13 @@ const AddVehicleForm = ({ vehicle, onClose, onSubmitted }: AddVehicleFormProps) 
                 value={formData.make}
                 onChange={(e) => handleChange('make', e.target.value)}
                 placeholder="Toyota"
+                maxLength={50}
                 required
+                className={errors.make ? 'border-red-500' : ''}
               />
+              {errors.make && (
+                <p className="text-red-500 text-sm mt-1">{errors.make}</p>
+              )}
             </div>
             
             <div>
@@ -122,8 +195,13 @@ const AddVehicleForm = ({ vehicle, onClose, onSubmitted }: AddVehicleFormProps) 
                 value={formData.model}
                 onChange={(e) => handleChange('model', e.target.value)}
                 placeholder="Camry"
+                maxLength={50}
                 required
+                className={errors.model ? 'border-red-500' : ''}
               />
+              {errors.model && (
+                <p className="text-red-500 text-sm mt-1">{errors.model}</p>
+              )}
             </div>
             
             <div>
@@ -137,7 +215,11 @@ const AddVehicleForm = ({ vehicle, onClose, onSubmitted }: AddVehicleFormProps) 
                 min="1900"
                 max={new Date().getFullYear() + 1}
                 required
+                className={errors.year ? 'border-red-500' : ''}
               />
+              {errors.year && (
+                <p className="text-red-500 text-sm mt-1">{errors.year}</p>
+              )}
             </div>
             
             <div>
@@ -147,7 +229,12 @@ const AddVehicleForm = ({ vehicle, onClose, onSubmitted }: AddVehicleFormProps) 
                 value={formData.color}
                 onChange={(e) => handleChange('color', e.target.value)}
                 placeholder="Blue"
+                maxLength={30}
+                className={errors.color ? 'border-red-500' : ''}
               />
+              {errors.color && (
+                <p className="text-red-500 text-sm mt-1">{errors.color}</p>
+              )}
             </div>
             
             <div className="flex gap-2 pt-4">
