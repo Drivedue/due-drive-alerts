@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
 import DocumentEditModal from "@/components/DocumentEditModal";
+import { config } from "@/lib/config";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -28,8 +28,8 @@ const Dashboard = () => {
   // Get user's display name from auth metadata or email
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
-  // Paystack configuration
-  const PAYSTACK_PUBLIC_KEY = "pk_test_fb056fa9b52e672a00eb6fa3cd9e5e0c73d96f2c";
+  // Paystack configuration from secure config
+  const PAYSTACK_PUBLIC_KEY = config.paystack.publicKey;
   const PRO_PLAN_PRICE = 499900; // ₦4,999 in kobo
   const CALLBACK_URL = `${window.location.origin}/payment/callback`;
 
@@ -62,10 +62,10 @@ const Dashboard = () => {
         
         supabase
           .from('subscriptions')
-          .select('status')
+          .select('status, plan_code')
           .eq('user_id', user.id)
           .eq('status', 'active')
-          .single()
+          .maybeSingle()
       ]);
 
       if (vehiclesResult.error) throw vehiclesResult.error;
@@ -112,11 +112,15 @@ const Dashboard = () => {
         expiredCount: expiredCount
       });
 
-      // Set user plan based on subscription
-      if (subscriptionResult.data && !subscriptionResult.error) {
+      // Set user plan based on active subscription
+      if (subscriptionResult.data && subscriptionResult.data.status === 'active') {
+        // For paying customers with active subscription, show Pro
         setUserPlan('Pro');
+        console.log('Active subscription found, setting plan to Pro:', subscriptionResult.data);
       } else {
+        // For users without active subscription, show Free
         setUserPlan('Free');
+        console.log('No active subscription found, setting plan to Free');
       }
 
     } catch (error) {
