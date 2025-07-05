@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Car, Calendar, Bell, AlertTriangle, Plus, Settings, Crown, Camera, Upload } from "lucide-react";
+import { Car, Calendar, Bell, AlertTriangle, Crown, Camera, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ vehicleCount: 0, documentCount: 0, expiredCount: 0 });
   const [editingDocument, setEditingDocument] = useState<any>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // Get user's display name from auth metadata or email
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
@@ -111,8 +112,8 @@ const Dashboard = () => {
         expiredCount: expiredCount
       });
 
-      // Set user plan
-      if (subscriptionResult.data) {
+      // Set user plan based on subscription
+      if (subscriptionResult.data && !subscriptionResult.error) {
         setUserPlan('Pro');
       } else {
         setUserPlan('Free');
@@ -250,24 +251,47 @@ const Dashboard = () => {
     fetchDashboardData(); // Refresh data after update
   };
 
-  const handleVehicleImageUpload = () => {
+  const handleVehicleImageUpload = async () => {
     // Create a file input element
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
     fileInput.multiple = false;
     
-    fileInput.onchange = (event) => {
+    fileInput.onchange = async (event) => {
       const target = event.target as HTMLInputElement;
       const file = target.files?.[0];
       
       if (file) {
-        // For now, just show a success message since we don't have storage bucket set up
-        toast({
-          title: "Image Selected",
-          description: "Vehicle image upload functionality will be implemented with storage bucket setup.",
-        });
-        console.log('Selected file:', file.name, file.size);
+        setUploadingImage(true);
+        try {
+          // Create a unique filename
+          const fileName = `${user!.id}/${Date.now()}-${file.name}`;
+          
+          // Upload to Supabase storage
+          const { data, error } = await supabase.storage
+            .from('vehicle-images')
+            .upload(fileName, file);
+
+          if (error) {
+            throw error;
+          }
+
+          toast({
+            title: "Image Uploaded",
+            description: "Vehicle image uploaded successfully!",
+          });
+          console.log('Uploaded file:', data);
+        } catch (error: any) {
+          console.error('Upload error:', error);
+          toast({
+            title: "Upload Failed",
+            description: error.message || "Failed to upload image. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setUploadingImage(false);
+        }
       }
     };
     
@@ -406,9 +430,9 @@ const Dashboard = () => {
                 <h4 className="font-semibold text-gray-900 mb-1">Upload Vehicle Picture</h4>
                 <p className="text-sm text-gray-600">Add photos of your vehicles for easy identification</p>
               </div>
-              <Button variant="outline" size="sm" className="mt-2">
+              <Button variant="outline" size="sm" className="mt-2" disabled={uploadingImage}>
                 <Upload className="h-4 w-4 mr-2" />
-                Choose Photo
+                {uploadingImage ? "Uploading..." : "Choose Photo"}
               </Button>
             </div>
           </CardContent>
