@@ -26,6 +26,13 @@ const Profile = () => {
   });
   const [userPlan, setUserPlan] = useState("Free");
   const [profile, setProfile] = useState<any>(null);
+  const [vehicleCount, setVehicleCount] = useState(0);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  // Paystack configuration
+  const PAYSTACK_PUBLIC_KEY = "pk_test_fb056fa9b52e672a00eb6fa3cd9e5e0c73d96f2c";
+  const PRO_PLAN_PRICE = 499900; // ₦4,999 in kobo
+  const CALLBACK_URL = `${window.location.origin}/payment/callback`;
 
   const fetchUserData = async () => {
     if (!user) return;
@@ -54,6 +61,16 @@ const Profile = () => {
 
       if (subscriptionData) {
         setUserPlan(subscriptionData.plan_code === 'pro' ? 'Pro' : 'Free');
+      }
+
+      // Get vehicle count
+      const { data: vehiclesData, error: vehiclesError } = await supabase
+        .from('vehicles')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (!vehiclesError) {
+        setVehicleCount(vehiclesData?.length || 0);
       }
 
       // Set form data
@@ -125,6 +142,104 @@ const Profile = () => {
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleUpgrade = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to upgrade your plan",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUpgrading(true);
+
+    try {
+      console.log('Starting upgrade process for user:', user.email);
+      
+      const { data, error } = await supabase.functions.invoke('create-subscription', {
+        body: {
+          email: user.email,
+          plan: 'pro',
+          callback_url: CALLBACK_URL,
+          amount: PRO_PLAN_PRICE,
+          public_key: PAYSTACK_PUBLIC_KEY
+        }
+      });
+
+      console.log('Upgrade response:', data, error);
+
+      if (error) {
+        console.error('Upgrade error:', error);
+        throw error;
+      }
+
+      if (data?.payment_url) {
+        console.log('Opening Paystack popup for:', data.payment_url);
+        
+        // Load Paystack inline script if not already loaded
+        if (!window.PaystackPop) {
+          const script = document.createElement('script');
+          script.src = 'https://js.paystack.co/v1/inline.js';
+          script.onload = () => openPaystackPopup(data);
+          document.head.appendChild(script);
+        } else {
+          openPaystackPopup(data);
+        }
+      } else {
+        toast({
+          title: "Upgrade Successful",
+          description: "Your subscription has been activated!",
+        });
+        fetchUserData();
+      }
+
+    } catch (error: any) {
+      console.error('Upgrade error:', error);
+      toast({
+        title: "Upgrade Failed",
+        description: error.message || "Failed to process upgrade. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
+  const openPaystackPopup = (paymentData: any) => {
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: user!.email,
+      amount: PRO_PLAN_PRICE,
+      ref: paymentData.reference,
+      callback: function(response: any) {
+        console.log('Payment successful:', response);
+        toast({
+          title: "Payment Successful",
+          description: "Your Pro subscription is being activated...",
+        });
+        
+        // Verify payment and update subscription status
+        setTimeout(() => {
+          fetchUserData();
+        }, 2000);
+        
+        // Navigate to callback URL for verification
+        window.location.href = `${CALLBACK_URL}?reference=${response.reference}`;
+      },
+      onClose: function() {
+        console.log('Payment popup closed');
+        toast({
+          title: "Payment Cancelled",
+          description: "Payment was cancelled. You can try again anytime.",
+          variant: "destructive"
+        });
+      }
+    });
+    
+    handler.openIframe();
   };
 
   if (loading) {
@@ -247,7 +362,7 @@ const Profile = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Vehicles registered:</span>
-              <span className="font-medium">0 of 5</span>
+              <span className="font-medium">{vehicleCount} of 5</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Plan:</span>
@@ -260,12 +375,15 @@ const Profile = () => {
 
         {/* Actions */}
         <div className="space-y-3">
-          <Button 
-            className="w-full bg-[#0A84FF] hover:bg-[#0A84FF]/90"
-            onClick={() => navigate('/settings')}
-          >
-            Upgrade to Pro
-          </Button>
+          {userPlan === "Free" && (
+            <Button 
+              className="w-full bg-[#0A84FF] hover:bg-[#0A84FF]/90"
+              onClick={handleUpgrade}
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? "Processing..." : "Upgrade to Pro"}
+            </Button>
+          )}
           
           <Button 
             variant="outline" 
@@ -279,5 +397,12 @@ const Profile = () => {
     </ProtectedRoute>
   );
 };
+
+// Extend window object to include PaystackPop
+declare global {
+  interface Window {
+    PaystackPop: any;
+  }
+}
 
 export default Profile;

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -250,10 +251,27 @@ const Dashboard = () => {
   };
 
   const handleVehicleImageUpload = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Vehicle picture upload feature will be available soon!",
-    });
+    // Create a file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.multiple = false;
+    
+    fileInput.onchange = (event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+      
+      if (file) {
+        // For now, just show a success message since we don't have storage bucket set up
+        toast({
+          title: "Image Selected",
+          description: "Vehicle image upload functionality will be implemented with storage bucket setup.",
+        });
+        console.log('Selected file:', file.name, file.size);
+      }
+    };
+    
+    fileInput.click();
   };
 
   if (loading) {
@@ -359,14 +377,16 @@ const Dashboard = () => {
                     </Badge>
                   </div>
                   <p className="text-gray-600 text-sm mb-3">{renewal.title} renewal {renewal.status === 'expired' ? 'overdue' : 'due'}</p>
-                  <Button 
-                    className="w-full text-xs" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleDocumentEdit(renewal)}
-                  >
-                    If renewed, update with new expiry date!
-                  </Button>
+                  {renewal.status === 'expired' && (
+                    <Button 
+                      className="w-full text-xs" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDocumentEdit(renewal)}
+                    >
+                      If renewed, update with new expiry date!
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}

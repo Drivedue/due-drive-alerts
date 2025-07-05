@@ -2,7 +2,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, FileText } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Edit, FileText, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +17,7 @@ interface VehicleCardProps {
 const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const [isDocumentsOpen, setIsDocumentsOpen] = useState(false);
   const { user } = useAuth();
 
   const fetchDocuments = async () => {
@@ -68,6 +70,20 @@ const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
     return types[type] || type;
   };
 
+  const getDocumentNumberColor = (index: number) => {
+    const colors = [
+      'bg-blue-500 text-white',
+      'bg-green-500 text-white',
+      'bg-purple-500 text-white',
+      'bg-red-500 text-white',
+      'bg-yellow-500 text-white',
+      'bg-indigo-500 text-white',
+      'bg-pink-500 text-white',
+      'bg-teal-500 text-white'
+    ];
+    return colors[index % colors.length];
+  };
+
   return (
     <Card className="bg-white shadow-sm">
       <CardContent className="p-4">
@@ -115,49 +131,59 @@ const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
 
         {/* Documents Section */}
         <div className="mt-4 pt-3 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Documents</span>
-              <Badge variant="secondary" className="text-xs">
-                {documents.length}
-              </Badge>
-            </div>
-            <Button
-              onClick={() => onAddDocument(vehicle.id)}
-              variant="ghost"
-              size="sm"
-              className="text-[#0A84FF] hover:text-[#0A84FF]/80 text-xs"
-            >
-              Add Document
-            </Button>
-          </div>
-          
-          {loadingDocuments ? (
-            <div className="text-xs text-gray-500">Loading documents...</div>
-          ) : documents.length > 0 ? (
-            <div className="space-y-1">
-              {documents.slice(0, 3).map((doc) => (
-                <div key={doc.id} className="flex justify-between items-center text-xs">
-                  <span className="text-gray-600 truncate">
-                    {getDocumentTypeLabel(doc.document_type)}
-                  </span>
-                  {doc.expiry_date && (
-                    <span className="text-gray-500 text-xs">
-                      Exp: {new Date(doc.expiry_date).toLocaleDateString()}
-                    </span>
-                  )}
+          <Collapsible open={isDocumentsOpen} onOpenChange={setIsDocumentsOpen}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Documents</span>
+                <Badge variant="secondary" className="text-xs">
+                  {documents.length}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddDocument(vehicle.id);
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-[#0A84FF] hover:text-[#0A84FF]/80 text-xs"
+                >
+                  Add Document
+                </Button>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isDocumentsOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="mt-3">
+              {loadingDocuments ? (
+                <div className="text-xs text-gray-500">Loading documents...</div>
+              ) : documents.length > 0 ? (
+                <div className="space-y-2">
+                  {documents.map((doc, index) => (
+                    <div key={doc.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getDocumentNumberColor(index)}`}>
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-800">
+                          {getDocumentTypeLabel(doc.document_type)}
+                        </div>
+                        {doc.expiry_date && (
+                          <div className="text-xs text-gray-500">
+                            Exp: {new Date(doc.expiry_date).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              {documents.length > 3 && (
-                <div className="text-xs text-gray-500">
-                  +{documents.length - 3} more documents
-                </div>
+              ) : (
+                <div className="text-xs text-gray-500 p-2">No documents added</div>
               )}
-            </div>
-          ) : (
-            <div className="text-xs text-gray-500">No documents added</div>
-          )}
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </CardContent>
     </Card>
