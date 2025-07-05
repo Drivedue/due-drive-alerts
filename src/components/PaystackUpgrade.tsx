@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Crown, Check } from "lucide-react";
+import { config } from "@/lib/config";
 
 interface PaystackUpgradeProps {
   userPlan: string;
@@ -17,8 +18,8 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Paystack configuration
-  const PAYSTACK_PUBLIC_KEY = "pk_test_fb056fa9b52e672a00eb6fa3cd9e5e0c73d96f2c";
+  // Paystack configuration from secure config
+  const PAYSTACK_PUBLIC_KEY = config.paystack.publicKey;
   const PRO_PLAN_PRICE = 499900; // ₦4,999 in kobo
   const CALLBACK_URL = `${window.location.origin}/payment/callback`;
 
@@ -56,7 +57,11 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
         throw error;
       }
 
-      if (data?.payment_url) {
+      if (data?.authorization_url) {
+        console.log('Redirecting to Paystack:', data.authorization_url);
+        // Open Paystack checkout in a new tab
+        window.open(data.authorization_url, '_blank');
+      } else if (data?.payment_url) {
         console.log('Opening Paystack popup for:', data.payment_url);
         
         // Load Paystack inline script if not already loaded

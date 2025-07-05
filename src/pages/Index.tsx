@@ -1,235 +1,139 @@
-import { useState } from 'react';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Car, Calendar, Bell, Shield, Users, Check } from "lucide-react";
+import { Car, Bell, Calendar, Shield, ArrowRight, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Mock user data - in real app this would come from auth context
-  const user = {
-    name: "John Doe",
-    plan: "Free",
-    vehiclesCount: 1,
-    documentsExpiringSoon: 2
-  };
 
   const features = [
     {
       icon: Car,
       title: "Vehicle Management",
-      description: "Manage multiple vehicles"
-    },
-    {
-      icon: Calendar,
-      title: "Smart Reminders", 
-      description: "Never miss renewals"
+      description: "Manage multiple vehicles",
+      color: "text-blue-600 bg-blue-100"
     },
     {
       icon: Bell,
+      title: "Smart Reminders", 
+      description: "Never miss renewals",
+      color: "text-green-600 bg-green-100"
+    },
+    {
+      icon: Calendar,
       title: "Multi-Channel Alerts",
-      description: "Push, email & SMS"
+      description: "Push, email & SMS",
+      color: "text-orange-600 bg-orange-100"
     },
     {
       icon: Shield,
       title: "Stay Compliant",
-      description: "Automatic tracking"
+      description: "Automatic tracking",
+      color: "text-purple-600 bg-purple-100"
     }
   ];
-
-  const plans = [
-    {
-      name: "Free",
-      price: "Free",
-      features: ["1 Vehicle", "Push Notifications"],
-      popular: false
-    },
-    {
-      name: "Pro",
-      price: "$9.99/mo",
-      features: ["5 Vehicles", "SMS Notifications"],
-      popular: true
-    },
-    {
-      name: "Team",
-      price: "$29.99/mo",
-      features: ["Unlimited", "Team Management"],
-      popular: false
-    }
-  ];
-
-  if (isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="container mx-auto px-4 py-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user.name}!</h1>
-              <p className="text-gray-600">Stay on top of your vehicle documents</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Badge variant={user.plan === "Pro" ? "default" : "secondary"}>
-                {user.plan} Plan
-              </Badge>
-              <Button onClick={() => navigate('/settings')}>Settings</Button>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid md:grid-cols-3 gap-4 mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Car className="h-4 w-4 text-[#0A84FF]" />
-                  Vehicles
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-[#0A84FF]">{user.vehiclesCount}</div>
-                <p className="text-xs text-gray-600">Registered vehicles</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-orange-600" />
-                  Expiring Soon
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{user.documentsExpiringSoon}</div>
-                <p className="text-xs text-gray-600">Documents need attention</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-green-600" />
-                  Notifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">Active</div>
-                <p className="text-xs text-gray-600">Reminder system</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/vehicles')}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Car className="h-4 w-4" />
-                  Manage Vehicles
-                </CardTitle>
-                <CardDescription className="text-sm">Add new vehicles and update documents</CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/documents')}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  View Documents
-                </CardTitle>
-                <CardDescription className="text-sm">Check expiry dates and manage renewals</CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-3">
-            <div className="bg-[#0A84FF] p-2 rounded-full">
-              <Car className="h-5 w-5 text-white" />
+      <div className="container mx-auto px-4 py-8 lg:py-16">
+        <div className="text-center mb-8 lg:mb-16">
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-blue-600 p-3 rounded-full">
+              <Car className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            Drive<span className="text-[#0A84FF]">Due</span>
+          <h1 className="text-3xl lg:text-6xl font-bold text-gray-900 mb-4 lg:mb-6">
+            Never Miss Another
+            <span className="text-blue-600 block">Vehicle Renewal</span>
           </h1>
-          <p className="text-base text-gray-600 mb-4 max-w-lg mx-auto">
-            Never miss vehicle document renewals. Get timely reminders for licenses, insurance, and more.
+          <p className="text-lg lg:text-xl text-gray-600 mb-6 lg:mb-8 max-w-2xl mx-auto">
+            Stay ahead of your vehicle document renewals with smart reminders and automated tracking
           </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Button size="lg" className="bg-[#0A84FF] hover:bg-[#0A84FF]/90" onClick={() => navigate('/register')}>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              size="lg"
+              onClick={() => navigate('/register')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 lg:px-8 py-3 lg:py-4 text-base lg:text-lg"
+            >
               Get Started Free
+              <ArrowRight className="ml-2 h-4 w-4 lg:h-5 lg:w-5" />
             </Button>
-            <Button size="lg" variant="outline" onClick={() => setIsLoggedIn(true)}>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate('/login')}
+              className="px-6 lg:px-8 py-3 lg:py-4 text-base lg:text-lg"
+            >
               Sign In
             </Button>
           </div>
         </div>
 
-        {/* Features List */}
-        <div className="mb-8 max-w-2xl mx-auto">
-          <ul className="space-y-3">
-            {features.map((feature, index) => (
-              <li key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
-                  <feature.icon className="h-4 w-4 text-[#0A84FF]" />
+        {/* Features Section - Compact Mobile Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-8 lg:mb-16">
+          {features.map((feature, index) => (
+            <Card key={index} className="text-center border-0 shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="p-3 lg:p-6">
+                <div className={`inline-flex p-2 lg:p-3 rounded-full ${feature.color} mb-2 lg:mb-4`}>
+                  <feature.icon className="h-4 w-4 lg:h-6 lg:w-6" />
                 </div>
-                <div>
-                  <h3 className="font-medium text-sm text-gray-900">{feature.title}</h3>
-                  <p className="text-xs text-gray-600">{feature.description}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+                <h3 className="font-semibold text-sm lg:text-lg text-gray-900 mb-1 lg:mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-xs lg:text-sm text-gray-600 leading-tight">
+                  {feature.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Pricing Section */}
-        <div className="mb-6">
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Simple Pricing</h2>
-            <p className="text-sm text-gray-600">Choose the right plan for you</p>
+        {/* Benefits Section */}
+        <div className="bg-white rounded-lg lg:rounded-2xl shadow-lg p-6 lg:p-12 mb-8 lg:mb-16">
+          <div className="text-center mb-6 lg:mb-12">
+            <h2 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-3 lg:mb-4">
+              Why Choose DriveDue?
+            </h2>
+            <p className="text-base lg:text-lg text-gray-600">
+              Join thousands of drivers who never miss a renewal
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-            {plans.map((plan, index) => (
-              <Card key={index} className={`relative ${plan.popular ? 'border-[#0A84FF] border-2' : ''}`}>
-                {plan.popular && (
-                  <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#0A84FF] text-xs">
-                    Popular
-                  </Badge>
-                )}
-                <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-lg">{plan.name}</CardTitle>
-                  <div className="text-xl font-bold text-[#0A84FF]">{plan.price}</div>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <ul className="space-y-1 mb-3">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-green-500" />
-                        <span className="text-xs">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    className={`w-full text-sm ${plan.popular ? 'bg-[#0A84FF] hover:bg-[#0A84FF]/90' : ''}`}
-                    variant={plan.popular ? "default" : "outline"}
-                    onClick={() => navigate('/register')}
-                  >
-                    {plan.name === "Free" ? "Start Free" : "Choose Plan"}
-                  </Button>
-                </CardContent>
-              </Card>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">
+            {[
+              "Automatic document tracking",
+              "Multi-channel notifications",
+              "Mobile-friendly dashboard",
+              "Secure document storage", 
+              "Multi-vehicle management",
+              "Never miss deadlines"
+            ].map((benefit, index) => (
+              <div key={index} className="flex items-center space-x-3">
+                <CheckCircle className="h-4 w-4 lg:h-5 lg:w-5 text-green-600 flex-shrink-0" />
+                <span className="text-sm lg:text-base text-gray-700">{benefit}</span>
+              </div>
             ))}
           </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="text-center bg-blue-600 rounded-lg lg:rounded-2xl p-6 lg:p-12 text-white">
+          <h2 className="text-2xl lg:text-3xl font-bold mb-3 lg:mb-4">
+            Ready to Get Started?
+          </h2>
+          <p className="text-base lg:text-lg mb-6 lg:mb-8 opacity-90">
+            Join DriveDue today and never worry about expired documents again
+          </p>
+          <Button
+            size="lg"
+            onClick={() => navigate('/register')}
+            className="bg-white text-blue-600 hover:bg-gray-100 px-6 lg:px-8 py-3 lg:py-4 text-base lg:text-lg font-semibold"
+          >
+            Start Your Free Account
+            <ArrowRight className="ml-2 h-4 w-4 lg:h-5 lg:w-5" />
+          </Button>
         </div>
       </div>
     </div>
