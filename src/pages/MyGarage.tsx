@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import MobileLayout from "@/components/MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -68,10 +67,34 @@ const MyGarage = () => {
     fetchVehicles();
   };
 
-  const handleDocumentSubmitted = () => {
-    setShowAddDocument(false);
-    // Refresh the page to update document counts
-    fetchVehicles();
+  const handleDocumentSubmit = async (documentData: any) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .insert({
+          ...documentData,
+          user_id: user.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Document added successfully!",
+      });
+
+      setShowAddDocument(false);
+      fetchVehicles();
+    } catch (error) {
+      console.error('Error adding document:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add document. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -133,7 +156,7 @@ const MyGarage = () => {
           <AddDocumentForm
             vehicles={vehicles}
             onClose={() => setShowAddDocument(false)}
-            onSubmitted={handleDocumentSubmitted}
+            onSubmit={handleDocumentSubmit}
           />
         )}
       </MobileLayout>

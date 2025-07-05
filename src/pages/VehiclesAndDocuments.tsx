@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -110,14 +109,64 @@ const VehiclesAndDocuments = () => {
     setShowAddDocumentForm(true);
   };
 
-  const handleVehicleSubmitted = () => {
-    fetchData();
-    setShowAddVehicleForm(false);
+  const handleVehicleSubmitted = async (vehicleData: any) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('vehicles')
+        .insert({
+          ...vehicleData,
+          user_id: user.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Vehicle added successfully!",
+      });
+
+      fetchData();
+      setShowAddVehicleForm(false);
+    } catch (error) {
+      console.error('Error adding vehicle:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add vehicle. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDocumentSubmitted = () => {
-    fetchData();
-    setShowAddDocumentForm(false);
+  const handleDocumentSubmit = async (documentData: any) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .insert({
+          ...documentData,
+          user_id: user.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Document added successfully!",
+      });
+
+      fetchData();
+      setShowAddDocumentForm(false);
+    } catch (error) {
+      console.error('Error adding document:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add document. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleViewDetails = (document: any) => {
@@ -335,7 +384,7 @@ const VehiclesAndDocuments = () => {
       {showAddDocumentForm && (
         <AddDocumentForm
           onClose={() => setShowAddDocumentForm(false)}
-          onSubmitted={handleDocumentSubmitted}
+          onSubmit={handleDocumentSubmit}
           vehicles={vehicles}
         />
       )}
