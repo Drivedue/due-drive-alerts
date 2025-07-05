@@ -3,7 +3,7 @@
 export const config = {
   // Paystack public key - this is safe to expose in frontend as it's a public key
   paystack: {
-    publicKey: "pk_test_4f5c4b2e8b6f2d1a3e9c0b5a2d8e1f4c3b6a9d2e",
+    publicKey: "pk_test_fb056fa9b52e672a00eb6fa3cd9e5e0c73d96f2c",
   },
   
   // App configuration

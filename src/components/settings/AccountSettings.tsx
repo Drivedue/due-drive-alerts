@@ -7,6 +7,7 @@ import { CreditCard, Crown, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { config } from "@/lib/config";
 
 interface AccountSettingsProps {
   userPlan: string;
@@ -45,7 +46,7 @@ const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) =
 
   const openPaystackPopup = (paymentData: any) => {
     const handler = window.PaystackPop.setup({
-      key: 'pk_test_aa3398a0c5ef6e5d9b8de3e8ba7644af3a07c0ec', // Your Paystack public key
+      key: config.paystack.publicKey,
       email: user!.email,
       amount: PRO_PLAN_PRICE,
       ref: paymentData.reference,

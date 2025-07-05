@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { config } from "@/lib/config";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ const Profile = () => {
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   // Paystack configuration
-  const PAYSTACK_PUBLIC_KEY = "pk_test_fb056fa9b52e672a00eb6fa3cd9e5e0c73d96f2c";
+  const PAYSTACK_PUBLIC_KEY = config.paystack.publicKey;
   const PRO_PLAN_PRICE = 499900; // ₦4,999 in kobo
   const CALLBACK_URL = `${window.location.origin}/payment/callback`;
 
