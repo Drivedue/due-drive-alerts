@@ -13,6 +13,13 @@ interface AccountSettingsProps {
   onUpgradeSuccess?: () => void;
 }
 
+// Extend window object to include PaystackPop
+declare global {
+  interface Window {
+    PaystackPop: any;
+  }
+}
+
 const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -20,6 +27,56 @@ const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) =
 
   const PRO_PLAN_PRICE = 499900; // ₦4,999 in kobo
   const CALLBACK_URL = `${window.location.origin}/payment/callback`;
+
+  const loadPaystackScript = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (window.PaystackPop) {
+        resolve();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load Paystack script'));
+      document.head.appendChild(script);
+    });
+  };
+
+  const openPaystackPopup = (paymentData: any) => {
+    const handler = window.PaystackPop.setup({
+      key: 'pk_test_aa3398a0c5ef6e5d9b8de3e8ba7644af3a07c0ec', // Your Paystack public key
+      email: user!.email,
+      amount: PRO_PLAN_PRICE,
+      ref: paymentData.reference,
+      callback: function(response: any) {
+        console.log('Payment successful:', response);
+        toast({
+          title: "Payment Successful!",
+          description: "Your Pro subscription is being activated...",
+        });
+        
+        // Call the onUpgradeSuccess callback if provided
+        if (onUpgradeSuccess) {
+          onUpgradeSuccess();
+        }
+        
+        // Navigate to callback URL for verification
+        window.location.href = `${CALLBACK_URL}?reference=${response.reference}`;
+      },
+      onClose: function() {
+        console.log('Payment popup closed');
+        toast({
+          title: "Payment Cancelled",
+          description: "Payment was cancelled. You can try again anytime.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
+    });
+    
+    handler.openIframe();
+  };
 
   const handleUpgrade = async () => {
     if (!user) {
@@ -37,6 +94,9 @@ const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) =
       console.log('Starting upgrade process for user:', user.email);
       console.log('Callback URL:', CALLBACK_URL);
       
+      // Load Paystack script first
+      await loadPaystackScript();
+      
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: {
           email: user.email,
@@ -52,17 +112,12 @@ const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) =
         throw new Error(error.message || 'Failed to create payment session');
       }
 
-      if (data?.authorization_url) {
-        console.log('Redirecting to Paystack:', data.authorization_url);
-        // Open Paystack checkout in a new tab
-        window.open(data.authorization_url, '_blank');
-        
-        toast({
-          title: "Payment Session Created",
-          description: "Opening Paystack checkout in a new tab...",
-        });
+      if (data?.reference) {
+        console.log('Opening Paystack popup with reference:', data.reference);
+        // Open Paystack popup
+        openPaystackPopup(data);
       } else {
-        throw new Error('No payment URL received from server');
+        throw new Error('No payment reference received from server');
       }
 
     } catch (error: any) {
@@ -72,7 +127,6 @@ const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) =
         description: error.message || "Failed to process upgrade. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsLoading(false);
     }
   };
