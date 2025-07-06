@@ -14,6 +14,13 @@ import { supabase } from "@/integrations/supabase/client";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { config } from "@/lib/config";
 
+// Extend window object to include PaystackPop
+declare global {
+  interface Window {
+    PaystackPop: any;
+  }
+}
+
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -145,68 +152,19 @@ const Profile = () => {
     await signOut();
   };
 
-  const handleUpgrade = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to upgrade your plan",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsUpgrading(true);
-
-    try {
-      console.log('Starting upgrade process for user:', user.email);
-      
-      const { data, error } = await supabase.functions.invoke('create-subscription', {
-        body: {
-          email: user.email,
-          plan: 'pro',
-          callback_url: CALLBACK_URL,
-          amount: PRO_PLAN_PRICE,
-          public_key: PAYSTACK_PUBLIC_KEY
-        }
-      });
-
-      console.log('Upgrade response:', data, error);
-
-      if (error) {
-        console.error('Upgrade error:', error);
-        throw error;
+  const loadPaystackScript = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (window.PaystackPop) {
+        resolve();
+        return;
       }
 
-      if (data?.payment_url) {
-        console.log('Opening Paystack popup for:', data.payment_url);
-        
-        // Load Paystack inline script if not already loaded
-        if (!window.PaystackPop) {
-          const script = document.createElement('script');
-          script.src = 'https://js.paystack.co/v1/inline.js';
-          script.onload = () => openPaystackPopup(data);
-          document.head.appendChild(script);
-        } else {
-          openPaystackPopup(data);
-        }
-      } else {
-        toast({
-          title: "Upgrade Successful",
-          description: "Your subscription has been activated!",
-        });
-        fetchUserData();
-      }
-
-    } catch (error: any) {
-      console.error('Upgrade error:', error);
-      toast({
-        title: "Upgrade Failed",
-        description: error.message || "Failed to process upgrade. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUpgrading(false);
-    }
+      const script = document.createElement('script');
+      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load Paystack script'));
+      document.head.appendChild(script);
+    });
   };
 
   const openPaystackPopup = (paymentData: any) => {
@@ -218,11 +176,11 @@ const Profile = () => {
       callback: function(response: any) {
         console.log('Payment successful:', response);
         toast({
-          title: "Payment Successful",
+          title: "Payment Successful!",
           description: "Your Pro subscription is being activated...",
         });
         
-        // Verify payment and update subscription status
+        // Refresh user data after successful payment
         setTimeout(() => {
           fetchUserData();
         }, 2000);
@@ -237,10 +195,64 @@ const Profile = () => {
           description: "Payment was cancelled. You can try again anytime.",
           variant: "destructive"
         });
+        setIsUpgrading(false);
       }
     });
     
     handler.openIframe();
+  };
+
+  const handleUpgrade = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to upgrade your plan",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUpgrading(true);
+
+    try {
+      console.log('Starting upgrade process for user:', user.email);
+      console.log('Callback URL:', CALLBACK_URL);
+      
+      // Load Paystack script first
+      await loadPaystackScript();
+      
+      const { data, error } = await supabase.functions.invoke('create-subscription', {
+        body: {
+          email: user.email,
+          amount: PRO_PLAN_PRICE,
+          callback_url: CALLBACK_URL
+        }
+      });
+
+      console.log('Upgrade response:', data, error);
+
+      if (error) {
+        console.error('Upgrade error:', error);
+        throw new Error(error.message || 'Failed to create payment session');
+      }
+
+      if (data?.reference) {
+        console.log('Opening Paystack popup with reference:', data.reference);
+        // Open Paystack popup
+        openPaystackPopup(data);
+      } else {
+        throw new Error('No payment reference received from server');
+      }
+
+    } catch (error: any) {
+      console.error('Upgrade error:', error);
+      toast({
+        title: "Upgrade Failed",
+        description: error.message || "Failed to process upgrade. Please try again.",
+        variant: "destructive"
+      });
+      setIsUpgrading(false);
+    }
   };
 
   if (loading) {
@@ -398,12 +410,5 @@ const Profile = () => {
     </ProtectedRoute>
   );
 };
-
-// Extend window object to include PaystackPop
-declare global {
-  interface Window {
-    PaystackPop: any;
-  }
-}
 
 export default Profile;

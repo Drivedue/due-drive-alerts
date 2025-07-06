@@ -27,8 +27,20 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-    onClose();
+    
+    // Ensure all required fields are present
+    const documentData = {
+      title: formData.title,
+      document_type: formData.document_type,
+      document_number: formData.document_number || '', // Include document_number
+      vehicle_id: formData.vehicle_id,
+      issue_date: formData.issue_date || null,
+      expiry_date: formData.expiry_date || null,
+      notes: formData.notes || null
+    };
+    
+    console.log('Submitting document data:', documentData);
+    onSubmit(documentData);
   };
 
   const handleChange = (field: string, value: string) => {
@@ -90,7 +102,6 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
                 value={formData.document_number}
                 onChange={(e) => handleChange('document_number', e.target.value)}
                 placeholder="Enter document number"
-                required
               />
             </div>
             

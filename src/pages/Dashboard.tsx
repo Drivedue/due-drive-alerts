@@ -24,9 +24,10 @@ const Dashboard = () => {
   const [editingDocument, setEditingDocument] = useState<any>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   
-  // Get user's display name from auth metadata or email
-  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  // Get user's display name from profile first, then auth metadata or email
+  const userName = userProfile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
   // Paystack configuration from secure config
   const PAYSTACK_PUBLIC_KEY = config.paystack.publicKey;
@@ -40,8 +41,8 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // Fetch all data in parallel for better performance
-      const [vehiclesResult, documentsResult, subscriptionResult] = await Promise.all([
+      // Fetch all data in parallel for better performance, including profile
+      const [vehiclesResult, documentsResult, subscriptionResult, profileResult] = await Promise.all([
         supabase
           .from('vehicles')
           .select('id, license_plate, make, model')
@@ -65,7 +66,13 @@ const Dashboard = () => {
           .select('status, plan_code')
           .eq('user_id', user.id)
           .eq('status', 'active')
-          .maybeSingle()
+          .maybeSingle(),
+
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
       ]);
 
       if (vehiclesResult.error) throw vehiclesResult.error;
@@ -75,6 +82,11 @@ const Dashboard = () => {
       const documentsData = documentsResult.data || [];
 
       setVehicles(vehiclesData);
+
+      // Set user profile data
+      if (profileResult.data) {
+        setUserProfile(profileResult.data);
+      }
 
       // Process documents for renewals
       const today = new Date();
