@@ -1,20 +1,17 @@
+
 import { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Car, Calendar, Bell, AlertTriangle, Crown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
 import DocumentEditModal from "@/components/DocumentEditModal";
-import { config } from "@/lib/config";
 import VehicleImageUpload from "@/components/VehicleImageUpload";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import QuickStats from "@/components/dashboard/QuickStats";
+import UpcomingRenewals from "@/components/dashboard/UpcomingRenewals";
+import { usePayment } from "@/hooks/usePayment";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -23,16 +20,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ vehicleCount: 0, documentCount: 0, expiredCount: 0 });
   const [editingDocument, setEditingDocument] = useState<any>(null);
-  const [isUpgrading, setIsUpgrading] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const { isUpgrading, handleUpgrade } = usePayment();
   
   // Get user's display name from profile first, then auth metadata or email
   const userName = userProfile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
-
-  // Paystack configuration from secure config
-  const PAYSTACK_PUBLIC_KEY = config.paystack.publicKey;
-  const PRO_PLAN_PRICE = 499900; // ₦4,999 in kobo
-  const CALLBACK_URL = `${window.location.origin}/payment/callback`;
 
   // Optimized data fetching with parallel requests
   const fetchDashboardData = async () => {
@@ -126,11 +118,9 @@ const Dashboard = () => {
 
       // Set user plan based on active subscription
       if (subscriptionResult.data && subscriptionResult.data.status === 'active') {
-        // For paying customers with active subscription, show Pro
         setUserPlan('Pro');
         console.log('Active subscription found, setting plan to Pro:', subscriptionResult.data);
       } else {
-        // For users without active subscription, show Free
         setUserPlan('Free');
         console.log('No active subscription found, setting plan to Free');
       }
@@ -150,122 +140,6 @@ const Dashboard = () => {
   useEffect(() => {
     fetchDashboardData();
   }, [user]);
-
-  const loadPaystackScript = (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      if (window.PaystackPop) {
-        resolve();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://js.paystack.co/v1/inline.js';
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Paystack script'));
-      document.head.appendChild(script);
-    });
-  };
-
-  const openPaystackPopup = (paymentData: any) => {
-    const handler = window.PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
-      email: user!.email,
-      amount: PRO_PLAN_PRICE,
-      ref: paymentData.reference,
-      callback: function(response: any) {
-        console.log('Payment successful:', response);
-        toast({
-          title: "Payment Successful!",
-          description: "Your Pro subscription is being activated...",
-        });
-        
-        // Verify payment and update subscription status
-        setTimeout(() => {
-          fetchDashboardData();
-        }, 2000);
-        
-        // Navigate to callback URL for verification
-        window.location.href = `${CALLBACK_URL}?reference=${response.reference}`;
-      },
-      onClose: function() {
-        console.log('Payment popup closed');
-        toast({
-          title: "Payment Cancelled",
-          description: "Payment was cancelled. You can try again anytime.",
-          variant: "destructive"
-        });
-        setIsUpgrading(false);
-      }
-    });
-    
-    handler.openIframe();
-  };
-
-  const handleUpgrade = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to upgrade your plan",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsUpgrading(true);
-
-    try {
-      console.log('Starting upgrade process for user:', user.email);
-      
-      // Load Paystack script first
-      await loadPaystackScript();
-      
-      const { data, error } = await supabase.functions.invoke('create-subscription', {
-        body: {
-          email: user.email,
-          amount: PRO_PLAN_PRICE,
-          callback_url: CALLBACK_URL
-        }
-      });
-
-      console.log('Upgrade response:', data, error);
-
-      if (error) {
-        console.error('Upgrade error:', error);
-        throw error;
-      }
-
-      if (data?.reference) {
-        console.log('Opening Paystack popup with reference:', data.reference);
-        // Open Paystack popup
-        openPaystackPopup(data);
-      } else {
-        toast({
-          title: "Upgrade Successful",
-          description: "Your subscription has been activated!",
-        });
-        fetchDashboardData();
-        setIsUpgrading(false);
-      }
-
-    } catch (error: any) {
-      console.error('Upgrade error:', error);
-      toast({
-        title: "Upgrade Failed",
-        description: error.message || "Failed to process upgrade. Please try again.",
-        variant: "destructive"
-      });
-      setIsUpgrading(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'expired': return 'text-red-600 bg-red-100';
-      case 'warning': return 'text-orange-600 bg-orange-100';
-      case 'safe': return 'text-green-600 bg-green-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
 
   const handleDocumentEdit = (document: any) => {
     setEditingDocument(document);
@@ -288,113 +162,23 @@ const Dashboard = () => {
 
   return (
     <MobileLayout title="Dashboard">
-      {/* Header with Plan Badge and Upgrade Button */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Welcome back, {userName}!</h2>
-            <p className="text-gray-600 text-sm">Stay on top of your vehicle documents</p>
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <Badge variant={userPlan === "Pro" ? "default" : "secondary"} className="mt-1">
-            {userPlan} Plan
-          </Badge>
-          {userPlan === "Free" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleUpgrade}
-              disabled={isUpgrading}
-              className="flex items-center gap-2 text-[#0A84FF] border-[#0A84FF] hover:bg-[#0A84FF]/10"
-            >
-              <Crown className="h-4 w-4" />
-              {isUpgrading ? "Processing..." : "Upgrade to Pro"}
-            </Button>
-          )}
-        </div>
-      </div>
+      <DashboardHeader
+        userName={userName}
+        userPlan={userPlan}
+        isUpgrading={isUpgrading}
+        onUpgrade={() => handleUpgrade(fetchDashboardData)}
+      />
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="bg-[#0A84FF]/10 p-2 rounded-full">
-                <Car className="h-4 w-4 text-[#0A84FF]" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-[#0A84FF]">{stats.vehicleCount}</div>
-                <p className="text-xs text-gray-600">Vehicles</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <QuickStats
+        vehicleCount={stats.vehicleCount}
+        documentCount={stats.documentCount}
+        expiredCount={stats.expiredCount}
+      />
 
-        <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="bg-green-100 p-2 rounded-full">
-                <Calendar className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-green-600">{stats.documentCount}</div>
-                <p className="text-xs text-gray-600">Documents</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="bg-red-100 p-2 rounded-full">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-red-600">{stats.expiredCount}</div>
-                <p className="text-xs text-gray-600">Expired</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Upcoming Renewals */}
-      {upcomingRenewals.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Upcoming Renewals</h3>
-          
-          <div className="space-y-3">
-            {upcomingRenewals.map((renewal) => (
-              <Card key={renewal.id} className={`border-l-4 ${renewal.status === 'expired' ? 'border-l-red-500' : 'border-l-orange-500'}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold">{renewal.vehiclePlate}</h4>
-                    <Badge className={getStatusColor(renewal.status)}>
-                      {renewal.status === 'expired' 
-                        ? `Expired ${Math.abs(renewal.daysLeft)} days ago`
-                        : `${renewal.daysLeft} days left`
-                      }
-                    </Badge>
-                  </div>
-                  <p className="text-gray-600 text-sm mb-3">{renewal.title} renewal {renewal.status === 'expired' ? 'overdue' : 'due'}</p>
-                  {renewal.status === 'expired' && (
-                    <Button 
-                      className="w-full text-xs" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDocumentEdit(renewal)}
-                    >
-                      If renewed, update with new expiry date!
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
+      <UpcomingRenewals
+        renewals={upcomingRenewals}
+        onDocumentEdit={handleDocumentEdit}
+      />
 
       {/* Document Edit Modal */}
       {editingDocument && (
