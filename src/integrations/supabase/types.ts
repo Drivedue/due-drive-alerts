@@ -72,6 +72,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          plan_type: string | null
           profile_image: string | null
           push_notifications: boolean | null
           reminder_days: number | null
@@ -84,6 +85,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          plan_type?: string | null
           profile_image?: string | null
           push_notifications?: boolean | null
           reminder_days?: number | null
@@ -96,6 +98,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          plan_type?: string | null
           profile_image?: string | null
           push_notifications?: boolean | null
           reminder_days?: number | null

@@ -9,10 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Plus, Car } from "lucide-react";
+import PlanLimitsBanner from "@/components/PlanLimitsBanner";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 
 const MyGarage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { canAddVehicle, canAddDocument, refreshCounts } = usePlanLimits();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddVehicle, setShowAddVehicle] = useState(false);
@@ -48,6 +51,14 @@ const MyGarage = () => {
   }, [user]);
 
   const handleAddVehicle = () => {
+    if (!canAddVehicle) {
+      toast({
+        title: "Vehicle Limit Reached",
+        description: "Free plan users are limited to 1 vehicle. Upgrade to Pro for unlimited vehicles.",
+        variant: "destructive"
+      });
+      return;
+    }
     setEditingVehicle(null);
     setShowAddVehicle(true);
   };
@@ -58,6 +69,14 @@ const MyGarage = () => {
   };
 
   const handleAddDocument = () => {
+    if (!canAddDocument) {
+      toast({
+        title: "Document Limit Reached",
+        description: "Free plan users are limited to 5 documents. Upgrade to Pro for unlimited documents.",
+        variant: "destructive"
+      });
+      return;
+    }
     setShowAddDocument(true);
   };
 
@@ -65,6 +84,7 @@ const MyGarage = () => {
     setShowAddVehicle(false);
     setEditingVehicle(null);
     fetchVehicles();
+    refreshCounts();
   };
 
   const handleDocumentSubmit = async (documentData: any) => {
@@ -78,7 +98,18 @@ const MyGarage = () => {
           user_id: user.id
         });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('limited to 5 documents')) {
+          toast({
+            title: "Document Limit Reached",
+            description: "Free plan users are limited to 5 documents. Upgrade to Pro for unlimited documents.",
+            variant: "destructive"
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       toast({
         title: "Success",
@@ -87,6 +118,7 @@ const MyGarage = () => {
 
       setShowAddDocument(false);
       fetchVehicles();
+      refreshCounts();
     } catch (error) {
       console.error('Error adding document:', error);
       toast({
@@ -112,6 +144,8 @@ const MyGarage = () => {
   return (
     <ProtectedRoute>
       <MobileLayout title="My Garage">
+        <PlanLimitsBanner />
+        
         <div className="space-y-3">
           {vehicles.length === 0 ? (
             <div className="text-center py-12">
@@ -137,6 +171,7 @@ const MyGarage = () => {
               onClick={handleAddVehicle}
               size="sm"
               className="bg-[#0A84FF] hover:bg-[#0A84FF]/90 text-white px-4 py-2"
+              disabled={!canAddVehicle}
             >
               <Plus className="h-4 w-4 mr-1" />
               Add Vehicle

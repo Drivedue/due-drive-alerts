@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 
 interface AddVehicleFormProps {
   vehicle?: any;
@@ -18,6 +18,7 @@ interface AddVehicleFormProps {
 const AddVehicleForm = ({ vehicle, onClose, onSubmitted }: AddVehicleFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { refreshCounts } = usePlanLimits();
   const [formData, setFormData] = useState({
     plateNumber: vehicle?.license_plate || '',
     make: vehicle?.make || '',
@@ -117,13 +118,25 @@ const AddVehicleForm = ({ vehicle, onClose, onSubmitted }: AddVehicleFormProps) 
         error = result.error;
       }
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('limited to 1 vehicle')) {
+          toast({
+            title: "Vehicle Limit Reached",
+            description: "Free plan users are limited to 1 vehicle. Upgrade to Pro for unlimited vehicles.",
+            variant: "destructive"
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       toast({
         title: "Success",
         description: `Vehicle ${vehicle ? 'updated' : 'added'} successfully`,
       });
 
+      refreshCounts();
       onSubmitted();
     } catch (error) {
       console.error('Error saving vehicle:', error);

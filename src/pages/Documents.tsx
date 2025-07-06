@@ -8,6 +8,8 @@ import DocumentsStats from "@/components/documents/DocumentsStats";
 import DocumentsFilters from "@/components/documents/DocumentsFilters";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import PlanLimitsBanner from "@/components/PlanLimitsBanner";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 
 const Documents = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -17,6 +19,7 @@ const Documents = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { canAddDocument, refreshCounts } = usePlanLimits();
 
   // Fetch documents and vehicles from database
   const fetchData = async () => {
@@ -95,6 +98,14 @@ const Documents = () => {
   }, [user]);
 
   const handleAddDocument = () => {
+    if (!canAddDocument) {
+      toast({
+        title: "Document Limit Reached",
+        description: "Free plan users are limited to 5 documents. Upgrade to Pro for unlimited documents.",
+        variant: "destructive"
+      });
+      return;
+    }
     setShowAddForm(true);
   };
 
@@ -119,7 +130,18 @@ const Documents = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('limited to 5 documents')) {
+          toast({
+            title: "Document Limit Reached",
+            description: "Free plan users are limited to 5 documents. Upgrade to Pro for unlimited documents.",
+            variant: "destructive"
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       toast({
         title: "Success",
@@ -128,6 +150,7 @@ const Documents = () => {
 
       // Refresh the documents list
       fetchData();
+      refreshCounts();
       handleCloseAddForm();
     } catch (error) {
       console.error('Error adding document:', error);
@@ -170,6 +193,8 @@ const Documents = () => {
 
   return (
     <MobileLayout title="Documents">
+      <PlanLimitsBanner />
+      
       <DocumentsStats {...stats} />
       
       <DocumentsFilters
@@ -186,6 +211,7 @@ const Documents = () => {
       <Button
         className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-[#0A84FF] hover:bg-[#0A84FF]/90 shadow-lg"
         onClick={handleAddDocument}
+        disabled={!canAddDocument}
       >
         <Plus className="h-6 w-6" />
       </Button>
