@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
 import DocumentEditModal from "@/components/DocumentEditModal";
-import VehicleImageUploadButton from "@/components/VehicleImageUploadButton";
 import { config } from "@/lib/config";
 
 const Dashboard = () => {
@@ -395,11 +394,6 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-
-      {/* Vehicle Picture Upload Card */}
-      <div className="mb-6">
-        <VehicleImageUploadButton />
-      </div>
 
       {/* Document Edit Modal */}
       {editingDocument && (
