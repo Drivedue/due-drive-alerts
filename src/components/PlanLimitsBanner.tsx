@@ -27,25 +27,27 @@ const PlanLimitsBanner = () => {
   }
 
   return (
-    <div className="mb-4 space-y-2">
-      <div className="flex items-center gap-2">
-        <Badge variant="secondary">Free Plan</Badge>
-        <span className="text-xs text-gray-600">
-          Vehicles: {vehicleCount}/{vehicleLimit} • Documents: {documentCount}/{documentLimit}
-        </span>
+    <>
+      <div className="mb-4 space-y-2">
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">Free Plan</Badge>
+          <span className="text-xs text-gray-600">
+            Vehicles: {vehicleCount}/{vehicleLimit} • Documents: {documentCount}/{documentLimit}
+          </span>
+        </div>
+        
+        {(isNearVehicleLimit || isNearDocumentLimit) && (
+          <Alert className="border-orange-200 bg-orange-50">
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-sm">
+              {isNearVehicleLimit && "You've reached your vehicle limit. "}
+              {isNearDocumentLimit && "You've reached your document limit. "}
+              Upgrade to Pro for unlimited access.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
-      
-      {(isNearVehicleLimit || isNearDocumentLimit) && (
-        <Alert className="border-orange-200 bg-orange-50">
-          <AlertTriangle className="h-4 w-4 text-orange-600" />
-          <AlertDescription className="text-sm">
-            {isNearVehicleLimit && "You've reached your vehicle limit. "}
-            {isNearDocumentLimit && "You've reached your document limit. "}
-            <UpgradePrompt userPlan="Free" />
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
+    </>
   );
 };
 

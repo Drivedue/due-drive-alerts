@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { Plus, Car } from "lucide-react";
 import PlanLimitsBanner from "@/components/PlanLimitsBanner";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import CompactUpgradeCard from "@/components/CompactUpgradeCard";
 
 const MyGarage = () => {
   const { user } = useAuth();
@@ -177,6 +178,11 @@ const MyGarage = () => {
               Add Vehicle
             </Button>
           </div>
+        </div>
+
+        {/* Compact Upgrade Card at bottom */}
+        <div className="mt-8">
+          <CompactUpgradeCard />
         </div>
 
         {showAddVehicle && (

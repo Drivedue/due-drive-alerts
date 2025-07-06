@@ -11,6 +11,7 @@ import { config } from "@/lib/config";
 interface PaystackUpgradeProps {
   userPlan: string;
   onUpgradeSuccess?: () => void;
+  compact?: boolean;
 }
 
 // Extend window object to include PaystackPop
@@ -20,7 +21,7 @@ declare global {
   }
 }
 
-const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) => {
+const PaystackUpgrade = ({ userPlan, onUpgradeSuccess, compact = false }: PaystackUpgradeProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -133,6 +134,9 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
   };
 
   if (userPlan === "Pro") {
+    if (compact) {
+      return null;
+    }
     return (
       <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white upgrade-section">
         <CardContent className="p-4 text-center">
@@ -143,6 +147,19 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess }: PaystackUpgradeProps) =
           </p>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (compact) {
+    return (
+      <Button 
+        onClick={handleUpgrade}
+        disabled={isLoading}
+        size="sm"
+        className="bg-[#0A84FF] hover:bg-[#0A84FF]/90 px-3 py-1 text-xs"
+      >
+        {isLoading ? "Processing..." : "Upgrade"}
+      </Button>
     );
   }
 
