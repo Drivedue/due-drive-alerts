@@ -46,9 +46,9 @@ const ProfilePicture = ({ profile, onImageUpdate }: ProfilePictureProps) => {
 
       console.log('Uploading profile picture:', fileName);
 
-      // Upload to the vehicle-images bucket (reusing existing bucket)
+      // Upload to the profile-images bucket
       const { data, error: uploadError } = await supabase.storage
-        .from('vehicle-images')
+        .from('profile-images')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: true // Allow overwriting existing profile picture
@@ -63,7 +63,7 @@ const ProfilePicture = ({ profile, onImageUpdate }: ProfilePictureProps) => {
 
       // Get the public URL
       const { data: urlData } = supabase.storage
-        .from('vehicle-images')
+        .from('profile-images')
         .getPublicUrl(fileName);
 
       const publicUrl = urlData.publicUrl;
