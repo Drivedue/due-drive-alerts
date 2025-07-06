@@ -32,7 +32,7 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
     const documentData = {
       title: formData.title,
       document_type: formData.document_type,
-      document_number: formData.document_number || '', // Include document_number
+      document_number: formData.document_number || '',
       vehicle_id: formData.vehicle_id,
       issue_date: formData.issue_date || null,
       expiry_date: formData.expiry_date || null,

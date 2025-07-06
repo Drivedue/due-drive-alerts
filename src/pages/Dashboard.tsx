@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Car, Calendar, Bell, AlertTriangle, Crown, Camera, Upload } from "lucide-react";
+import { Car, Calendar, Bell, AlertTriangle, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
 import DocumentEditModal from "@/components/DocumentEditModal";
+import VehicleImageUploadButton from "@/components/VehicleImageUploadButton";
 import { config } from "@/lib/config";
 
 const Dashboard = () => {
@@ -23,7 +24,6 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ vehicleCount: 0, documentCount: 0, expiredCount: 0 });
   const [editingDocument, setEditingDocument] = useState<any>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   
   // Get user's display name from profile first, then auth metadata or email
@@ -276,53 +276,6 @@ const Dashboard = () => {
     fetchDashboardData(); // Refresh data after update
   };
 
-  const handleVehicleImageUpload = async () => {
-    // Create a file input element
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.multiple = false;
-    
-    fileInput.onchange = async (event) => {
-      const target = event.target as HTMLInputElement;
-      const file = target.files?.[0];
-      
-      if (file) {
-        setUploadingImage(true);
-        try {
-          // Create a unique filename
-          const fileName = `${user!.id}/${Date.now()}-${file.name}`;
-          
-          // Upload to Supabase storage
-          const { data, error } = await supabase.storage
-            .from('vehicle-images')
-            .upload(fileName, file);
-
-          if (error) {
-            throw error;
-          }
-
-          toast({
-            title: "Image Uploaded",
-            description: "Vehicle image uploaded successfully!",
-          });
-          console.log('Uploaded file:', data);
-        } catch (error: any) {
-          console.error('Upload error:', error);
-          toast({
-            title: "Upload Failed",
-            description: error.message || "Failed to upload image. Please try again.",
-            variant: "destructive"
-          });
-        } finally {
-          setUploadingImage(false);
-        }
-      }
-    };
-    
-    fileInput.click();
-  };
-
   if (loading) {
     return (
       <MobileLayout title="Dashboard">
@@ -445,23 +398,7 @@ const Dashboard = () => {
 
       {/* Vehicle Picture Upload Card */}
       <div className="mb-6">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-dashed border-gray-300" onClick={handleVehicleImageUpload}>
-          <CardContent className="p-6 text-center">
-            <div className="flex flex-col items-center gap-3">
-              <div className="bg-blue-50 p-4 rounded-full">
-                <Camera className="h-8 w-8 text-[#0A84FF]" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-1">Upload Vehicle Picture</h4>
-                <p className="text-sm text-gray-600">Add photos of your vehicles for easy identification</p>
-              </div>
-              <Button variant="outline" size="sm" className="mt-2" disabled={uploadingImage}>
-                <Upload className="h-4 w-4 mr-2" />
-                {uploadingImage ? "Uploading..." : "Choose Photo"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <VehicleImageUploadButton />
       </div>
 
       {/* Document Edit Modal */}

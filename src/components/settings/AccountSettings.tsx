@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Crown, Check } from "lucide-react";
+import { CreditCard, Crown, Check, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -187,7 +186,7 @@ const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) =
         </div>
 
         {userPlan === "Free" && (
-          <div className="border-t pt-3">
+          <div className="border-t pt-3 space-y-3">
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-semibold text-gray-900 mb-2">Upgrade to Pro</h4>
               <div className="space-y-2 mb-4">
@@ -219,6 +218,34 @@ const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) =
                   {isLoading ? "Processing..." : "Upgrade Now"}
                 </Button>
               </div>
+            </div>
+
+            {/* Team Plan Coming Soon */}
+            <div className="bg-gray-100 rounded-lg p-4 opacity-75">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-gray-700 flex items-center">
+                  <Users className="h-4 w-4 mr-2" />
+                  Team Plan
+                </h4>
+                <Badge variant="outline" className="text-xs">Coming Soon</Badge>
+              </div>
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Check className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>Everything in Pro</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Check className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>Team collaboration</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Check className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>Manage unlimited vehicles</span>
+                </div>
+              </div>
+              <Button size="sm" disabled className="w-full">
+                Coming Soon
+              </Button>
             </div>
           </div>
         )}

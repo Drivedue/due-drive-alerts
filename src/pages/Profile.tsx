@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ProfilePicture from "@/components/ProfilePicture";
 import { config } from "@/lib/config";
 
 // Extend window object to include PaystackPop
@@ -152,6 +152,10 @@ const Profile = () => {
     await signOut();
   };
 
+  const handleProfileImageUpdate = (imageUrl: string) => {
+    setProfile((prev: any) => ({ ...prev, profile_image: imageUrl }));
+  };
+
   const loadPaystackScript = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (window.PaystackPop) {
@@ -276,8 +280,8 @@ const Profile = () => {
         {/* Profile Header */}
         <Card className="mb-6">
           <CardContent className="p-6 text-center">
-            <div className="bg-[#0A84FF]/10 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-              <User className="h-10 w-10 text-[#0A84FF]" />
+            <div className="mb-4">
+              <ProfilePicture profile={profile} onImageUpdate={handleProfileImageUpdate} />
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-1">
               {formData.fullName || 'User'}
