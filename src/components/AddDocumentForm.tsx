@@ -116,7 +116,7 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
                 required
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={vehicles.length === 1 ? "Vehicle auto-selected" : "Select vehicle"} />
+                  <SelectValue placeholder="Select vehicle" />
                 </SelectTrigger>
                 <SelectContent>
                   {vehicles.map((vehicle) => (
