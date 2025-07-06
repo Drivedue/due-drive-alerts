@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+import { X, Car } from "lucide-react";
 
 interface AddDocumentFormProps {
   onClose: () => void;
@@ -24,6 +24,9 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
     expiry_date: '',
     notes: ''
   });
+
+  // Get selected vehicle details
+  const selectedVehicle = vehicles.find(v => v.id === formData.vehicle_id);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,12 +121,32 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
                 <SelectContent>
                   {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.license_plate} - {vehicle.make} {vehicle.model}
+                      {vehicle.license_plate} - {vehicle.make} {vehicle.model} ({vehicle.year})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Selected Vehicle Details Card */}
+            {selectedVehicle && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Car className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium text-blue-900">Selected Vehicle</span>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <div><span className="font-medium">License Plate:</span> {selectedVehicle.license_plate}</div>
+                    <div><span className="font-medium">Vehicle:</span> {selectedVehicle.make} {selectedVehicle.model}</div>
+                    <div><span className="font-medium">Year:</span> {selectedVehicle.year}</div>
+                    {selectedVehicle.color && (
+                      <div><span className="font-medium">Color:</span> {selectedVehicle.color}</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <div>
               <Label htmlFor="issue_date">Issue Date</Label>
