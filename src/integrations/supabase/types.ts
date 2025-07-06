@@ -154,6 +154,7 @@ export type Database = {
           owner_email: string | null
           updated_at: string
           user_id: string
+          vehicle_image: string | null
           vehicle_type: string | null
           vin: string | null
           year: number
@@ -168,6 +169,7 @@ export type Database = {
           owner_email?: string | null
           updated_at?: string
           user_id: string
+          vehicle_image?: string | null
           vehicle_type?: string | null
           vin?: string | null
           year: number
@@ -182,6 +184,7 @@ export type Database = {
           owner_email?: string | null
           updated_at?: string
           user_id?: string
+          vehicle_image?: string | null
           vehicle_type?: string | null
           vin?: string | null
           year?: number

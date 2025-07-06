@@ -43,7 +43,7 @@ const VehicleImageUpload = ({ vehicleId, onImageUploaded, currentImageUrl }: Veh
       }
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${vehicleId || 'temp'}_${Math.random()}.${fileExt}`;
+      const fileName = `${user.id}/${vehicleId || Date.now()}_${Math.random()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('vehicle-images')
@@ -60,6 +60,20 @@ const VehicleImageUpload = ({ vehicleId, onImageUploaded, currentImageUrl }: Veh
 
       const publicUrl = data.publicUrl;
       setImageUrl(publicUrl);
+      
+      // If we have a vehicle ID, update the vehicle record with the image URL
+      if (vehicleId) {
+        const { error: updateError } = await supabase
+          .from('vehicles')
+          .update({ vehicle_image: publicUrl })
+          .eq('id', vehicleId)
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+      }
+
       onImageUploaded?.(publicUrl);
 
       toast({
@@ -94,6 +108,19 @@ const VehicleImageUpload = ({ vehicleId, onImageUploaded, currentImageUrl }: Veh
 
       if (error) {
         console.error('Error removing image:', error);
+      }
+
+      // Update vehicle record to remove image URL
+      if (vehicleId && user) {
+        const { error: updateError } = await supabase
+          .from('vehicles')
+          .update({ vehicle_image: null })
+          .eq('id', vehicleId)
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('Error updating vehicle:', updateError);
+        }
       }
 
       setImageUrl('');

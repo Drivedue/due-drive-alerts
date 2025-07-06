@@ -91,6 +91,17 @@ const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
   return (
     <Card className="bg-white shadow-sm">
       <CardContent className="p-3">
+        {/* Vehicle Image */}
+        {vehicle.vehicle_image && (
+          <div className="mb-3">
+            <img
+              src={vehicle.vehicle_image}
+              alt={`${vehicle.make} ${vehicle.model}`}
+              className="w-full h-32 object-cover rounded-lg"
+            />
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-2">
           <div 
             className="font-semibold text-base text-[#0A84FF] cursor-pointer hover:underline" 
