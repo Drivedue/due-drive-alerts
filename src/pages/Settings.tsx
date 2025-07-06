@@ -26,6 +26,8 @@ const Settings = () => {
   const fetchUserData = async () => {
     if (!user) return;
 
+    console.log('Fetching user data for:', user.email);
+
     // Get profile
     const { data: profileData } = await supabase
       .from('profiles')
@@ -35,17 +37,21 @@ const Settings = () => {
     
     setProfile(profileData);
 
-    // Get subscription
-    const { data: subscriptionData } = await supabase
+    // Get subscription with more detailed logging
+    const { data: subscriptionData, error: subscriptionError } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .single();
 
-    if (subscriptionData) {
+    console.log('Subscription query result:', { subscriptionData, subscriptionError });
+
+    if (subscriptionData && subscriptionData.plan_code === 'pro') {
+      console.log('Pro subscription found, setting plan to Pro');
       setUserPlan('Pro');
     } else {
+      console.log('No active subscription found, setting plan to Free');
       setUserPlan('Free');
     }
   };
@@ -54,13 +60,37 @@ const Settings = () => {
     fetchUserData();
   }, [user]);
 
+  // Listen for URL changes to detect when user returns from payment
+  useEffect(() => {
+    const handleUrlChange = () => {
+      // Check if user just returned from payment
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('reference')) {
+        console.log('Detected return from payment, refreshing user data...');
+        setTimeout(() => {
+          fetchUserData();
+        }, 2000); // Wait 2 seconds for payment verification to complete
+      }
+    };
+
+    window.addEventListener('popstate', handleUrlChange);
+    handleUrlChange(); // Check on component mount
+
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, []);
+
   const handleSignOut = async () => {
     await signOut();
   };
 
   const handleUpgradeSuccess = () => {
+    console.log('Upgrade success callback triggered');
     // Refresh user data after successful upgrade
-    fetchUserData();
+    setTimeout(() => {
+      fetchUserData();
+    }, 1000);
   };
 
   return (

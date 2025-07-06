@@ -57,13 +57,8 @@ const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) =
           description: "Your Pro subscription is being activated...",
         });
         
-        // Call the onUpgradeSuccess callback if provided
-        if (onUpgradeSuccess) {
-          onUpgradeSuccess();
-        }
-        
-        // Navigate to callback URL for verification
-        window.location.href = `${CALLBACK_URL}?reference=${response.reference}`;
+        // Call the verification function immediately
+        verifyPayment(response.reference);
       },
       onClose: function() {
         console.log('Payment popup closed');
@@ -77,6 +72,48 @@ const AccountSettings = ({ userPlan, onUpgradeSuccess }: AccountSettingsProps) =
     });
     
     handler.openIframe();
+  };
+
+  const verifyPayment = async (reference: string) => {
+    try {
+      console.log('Verifying payment with reference:', reference);
+      
+      const { data, error } = await supabase.functions.invoke('verify-payment', {
+        body: { reference }
+      });
+
+      console.log('Verification response:', data, error);
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.success) {
+        toast({
+          title: "Subscription Activated!",
+          description: "Your Pro subscription is now active. Refreshing your account...",
+        });
+        
+        // Call the onUpgradeSuccess callback if provided
+        if (onUpgradeSuccess) {
+          setTimeout(() => {
+            onUpgradeSuccess();
+          }, 1000);
+        }
+      } else {
+        throw new Error('Payment verification failed');
+      }
+
+    } catch (error: any) {
+      console.error('Payment verification error:', error);
+      toast({
+        title: "Verification Failed",
+        description: error.message || "Failed to verify payment. Please contact support.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleUpgrade = async () => {
