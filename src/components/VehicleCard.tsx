@@ -3,7 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Edit, FileText, ChevronDown } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Edit, FileText, ChevronDown, ZoomIn } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,24 +92,46 @@ const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
   return (
     <Card className="bg-white shadow-sm">
       <CardContent className="p-3">
-        {/* Vehicle Image */}
-        {vehicle.vehicle_image && (
-          <div className="mb-3">
-            <img
-              src={vehicle.vehicle_image}
-              alt={`${vehicle.make} ${vehicle.model}`}
-              className="w-full h-32 object-cover rounded-lg"
-            />
-          </div>
-        )}
-
         <div className="flex items-center justify-between mb-2">
-          <div 
-            className="font-semibold text-base text-[#0A84FF] cursor-pointer hover:underline" 
-            onClick={() => onAddDocument(vehicle.id)}
-          >
-            {vehicle.license_plate}
+          <div className="flex items-center gap-3">
+            {/* Circular vehicle image with enlarge option */}
+            {vehicle.vehicle_image && (
+              <div className="relative">
+                <img
+                  src={vehicle.vehicle_image}
+                  alt={`${vehicle.make} ${vehicle.model}`}
+                  className="w-12 h-12 object-cover rounded-full border-2 border-gray-200"
+                />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all rounded-full flex items-center justify-center opacity-0 hover:opacity-100">
+                      <ZoomIn className="h-3 w-3 text-white" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <img
+                      src={vehicle.vehicle_image}
+                      alt={`${vehicle.make} ${vehicle.model}`}
+                      className="w-full h-auto rounded-lg"
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+            
+            <div>
+              <div 
+                className="font-semibold text-base text-[#0A84FF] cursor-pointer hover:underline" 
+                onClick={() => onAddDocument(vehicle.id)}
+              >
+                {vehicle.license_plate}
+              </div>
+              <div className="text-xs text-gray-600">
+                {vehicle.make} {vehicle.model} ({vehicle.year})
+              </div>
+            </div>
           </div>
+          
           <div className="flex gap-2">
             {vehicle.vehicle_type && (
               <Badge className={`text-xs ${getVehicleTypeColor(vehicle.vehicle_type)}`}>
@@ -121,28 +144,23 @@ const VehicleCard = ({ vehicle, onEdit, onAddDocument }: VehicleCardProps) => {
           </div>
         </div>
         
-        <div className="space-y-1 text-xs text-gray-600 mb-3">
-          <div className="flex justify-between">
-            <span>Make & Model:</span>
-            <span className="font-medium text-xs">{vehicle.make} {vehicle.model}</span>
+        {/* Compact vehicle details */}
+        {(vehicle.color || vehicle.owner_email) && (
+          <div className="space-y-1 text-xs text-gray-600 mb-3 ml-15">
+            {vehicle.color && (
+              <div className="flex justify-between">
+                <span>Color:</span>
+                <span className="font-medium text-xs">{vehicle.color}</span>
+              </div>
+            )}
+            {vehicle.owner_email && (
+              <div className="flex justify-between">
+                <span>Owner Email:</span>
+                <span className="font-medium text-xs break-all">{vehicle.owner_email}</span>
+              </div>
+            )}
           </div>
-          <div className="flex justify-between">
-            <span>Year:</span>
-            <span className="font-medium text-xs">{vehicle.year}</span>
-          </div>
-          {vehicle.color && (
-            <div className="flex justify-between">
-              <span>Color:</span>
-              <span className="font-medium text-xs">{vehicle.color}</span>
-            </div>
-          )}
-          {vehicle.owner_email && (
-            <div className="flex justify-between">
-              <span>Owner Email:</span>
-              <span className="font-medium text-xs break-all">{vehicle.owner_email}</span>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Documents Section */}
         <div className="pt-2 border-t border-gray-100">
