@@ -1,11 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Mail, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NotificationSettingsProps {
   userPlan: string;
@@ -13,6 +15,8 @@ interface NotificationSettingsProps {
 
 const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [isProUser, setIsProUser] = useState(false);
   
   const [notifications, setNotifications] = useState({
     push: true,
@@ -20,7 +24,42 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
     sms: false
   });
 
+  // Check if user actually has active Pro subscription
+  useEffect(() => {
+    const checkProStatus = async () => {
+      if (!user) return;
+
+      try {
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .eq('plan_code', 'pro')
+          .single();
+
+        setIsProUser(!!subscription);
+        console.log('Pro subscription status:', !!subscription);
+      } catch (error) {
+        console.error('Error checking Pro status:', error);
+        setIsProUser(false);
+      }
+    };
+
+    checkProStatus();
+  }, [user, userPlan]);
+
   const handleNotificationChange = (type: keyof typeof notifications) => {
+    // Check if trying to enable SMS without Pro subscription
+    if (type === 'sms' && !notifications.sms && !isProUser) {
+      toast({
+        title: "Pro Subscription Required",
+        description: "SMS notifications are only available for Pro subscribers.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setNotifications(prev => ({
       ...prev,
       [type]: !prev[type]
@@ -69,7 +108,7 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
             <MessageSquare className="h-4 w-4 text-gray-600" />
             <div>
               <span>SMS Notifications</span>
-              {userPlan === "Free" && (
+              {!isProUser && (
                 <Badge variant="secondary" className="ml-2 text-xs">Pro Only</Badge>
               )}
             </div>
@@ -77,7 +116,7 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
           <Switch
             checked={notifications.sms}
             onCheckedChange={() => handleNotificationChange('sms')}
-            disabled={userPlan === "Free"}
+            disabled={!isProUser}
           />
         </div>
       </CardContent>

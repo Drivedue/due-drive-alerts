@@ -1,225 +1,118 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface PaymentVerificationRequest {
+  reference: string;
 }
 
-// URL validation function
-const isValidRedirectUrl = (url: string): boolean => {
-  try {
-    const parsedUrl = new URL(url)
-    // Only allow same origin redirects for security
-    const allowedHosts = ['localhost', '127.0.0.1', 'your-app-domain.com']
-    return allowedHosts.some(host => parsedUrl.hostname.includes(host))
-  } catch {
-    return false
-  }
-}
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    const { reference }: PaymentVerificationRequest = await req.json();
+    
+    if (!reference) {
+      throw new Error("Payment reference is required");
     }
 
-    // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false
-        },
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    )
-
-    // Verify user authentication
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !user) {
-      console.error('Authentication error:', authError)
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Validate request method
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { 
-          status: 405, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Parse and validate request body
-    let requestBody
-    try {
-      requestBody = await req.json()
-    } catch (error) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    const { reference, redirect_url } = requestBody
-
-    // Input validation
-    if (!reference || typeof reference !== 'string') {
-      return new Response(
-        JSON.stringify({ error: 'Payment reference is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Validate reference format (basic sanitization)
-    if (!/^[a-zA-Z0-9_-]+$/.test(reference)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid reference format' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Validate redirect URL if provided
-    if (redirect_url && !isValidRedirectUrl(redirect_url)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid redirect URL' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Get Paystack secret key
-    const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')
+    const paystackSecretKey = Deno.env.get("PAYSTACK_SECRET_KEY");
     if (!paystackSecretKey) {
-      console.error('Paystack secret key not configured')
-      return new Response(
-        JSON.stringify({ error: 'Payment service not configured' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      throw new Error("Paystack secret key not configured");
     }
 
     // Verify payment with Paystack
-    const verificationResponse = await fetch(
-      `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${paystackSecretKey}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${paystackSecretKey}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-    if (!verificationResponse.ok) {
-      console.error('Paystack verification failed:', verificationResponse.status)
-      return new Response(
-        JSON.stringify({ error: 'Payment verification failed' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    const verifyData = await verifyResponse.json();
+    console.log("Paystack verification response:", verifyData);
+
+    if (!verifyData.status || verifyData.data.status !== "success") {
+      throw new Error("Payment verification failed");
     }
 
-    const verificationData = await verificationResponse.json()
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    if (!verificationData.status || verificationData.data.status !== 'success') {
-      return new Response(
-        JSON.stringify({ error: 'Payment was not successful' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    // Get user from payment metadata
+    const customerEmail = verifyData.data.customer.email;
+    
+    // Find user by email
+    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+    if (userError) {
+      console.error("Error fetching users:", userError);
+      throw new Error("Failed to find user");
     }
 
-    // Update subscription status in database
-    const { error: updateError } = await supabaseClient
+    const user = userData.users.find(u => u.email === customerEmail);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Create or update subscription
+    const subscriptionData = {
+      user_id: user.id,
+      plan_code: 'pro',
+      status: 'active',
+      paystack_customer_code: verifyData.data.customer.customer_code,
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+    };
+
+    const { error: subscriptionError } = await supabase
       .from('subscriptions')
-      .update({
-        status: 'active',
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      })
-      .eq('user_id', user.id)
-      .eq('paystack_subscription_code', reference)
+      .upsert(subscriptionData, {
+        onConflict: 'user_id'
+      });
 
-    if (updateError) {
-      console.error('Database update error:', updateError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to update subscription status' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    if (subscriptionError) {
+      console.error("Subscription upsert error:", subscriptionError);
+      throw new Error("Failed to update subscription");
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          status: 'success',
-          reference: reference,
-          amount: verificationData.data.amount,
-          redirect_url: redirect_url || '/dashboard'
-        }
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    console.log("Successfully verified payment and updated subscription for user:", user.id);
 
-  } catch (error) {
-    console.error('Unexpected error:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      JSON.stringify({ 
+        success: true, 
+        message: "Payment verified and subscription activated",
+        user_id: user.id,
+        plan: 'pro'
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
-    )
+    );
+
+  } catch (error: any) {
+    console.error("Payment verification error:", error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
   }
-})
+};
+
+serve(handler);
