@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/MobileLayout";
 import DocumentEditModal from "@/components/DocumentEditModal";
 import { config } from "@/lib/config";
+import VehicleImageUpload from "@/components/VehicleImageUpload";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -403,6 +404,14 @@ const Dashboard = () => {
           onUpdate={handleDocumentUpdate}
         />
       )}
+
+      {/* Vehicle Image Upload Section */}
+      <div className="mt-8">
+        <VehicleImageUpload 
+          vehicles={vehicles} 
+          onImageUploaded={fetchDashboardData}
+        />
+      </div>
     </MobileLayout>
   );
 };
