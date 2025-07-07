@@ -27,15 +27,62 @@ export const usePlanLimits = () => {
     if (!user) return;
 
     try {
-      const { data: profile, error } = await supabase
+      console.log('Fetching user plan for:', user.id);
+
+      // First check the profiles table for plan_type
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('plan_type')
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        // If profile doesn't exist, create it with default plan
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: user.id, plan_type: 'free' });
+        
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+        }
+      }
 
-      const planType = profile?.plan_type || 'free';
+      // Also check for active subscription
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single();
+
+      console.log('Profile data:', profileData);
+      console.log('Subscription data:', subscriptionData);
+
+      // Determine plan type based on both profile and subscription
+      let planType = 'free';
+      
+      if (subscriptionData && subscriptionData.plan_code === 'pro') {
+        planType = 'pro';
+        
+        // If subscription is active but profile doesn't reflect it, update profile
+        if (profileData?.plan_type !== 'pro') {
+          console.log('Syncing profile plan type with active subscription');
+          const { error: syncError } = await supabase
+            .from('profiles')
+            .update({ plan_type: 'pro' })
+            .eq('id', user.id);
+          
+          if (syncError) {
+            console.error('Error syncing profile plan type:', syncError);
+          }
+        }
+      } else if (profileData?.plan_type === 'pro') {
+        planType = 'pro';
+      }
+
+      console.log('Final determined plan type:', planType);
+
       setUserPlan({
         plan_type: planType as 'free' | 'pro',
         limits: planType === 'pro' 
@@ -88,6 +135,9 @@ export const usePlanLimits = () => {
     canAddVehicle,
     canAddDocument,
     loading,
-    refreshCounts: fetchCounts
+    refreshCounts: () => {
+      fetchUserPlan();
+      fetchCounts();
+    }
   };
 };

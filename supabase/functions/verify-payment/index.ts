@@ -106,6 +106,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Successfully created subscription:", subscriptionResult);
 
+    // Update user's plan type in profiles table
+    console.log("Updating user profile plan type to 'pro'");
+    const { error: profileUpdateError } = await supabase
+      .from('profiles')
+      .update({ plan_type: 'pro' })
+      .eq('id', user.id);
+
+    if (profileUpdateError) {
+      console.error("Profile update error:", profileUpdateError);
+      throw new Error("Failed to update user profile plan type");
+    }
+
+    console.log("Successfully updated user profile plan type");
+
     return new Response(
       JSON.stringify({ 
         success: true, 
