@@ -92,6 +92,8 @@ const MyGarage = () => {
     if (!user) return;
 
     try {
+      console.log('Submitting document with data:', documentData);
+      
       const { error } = await supabase
         .from('documents')
         .insert({
@@ -100,14 +102,25 @@ const MyGarage = () => {
         });
 
       if (error) {
+        console.error('Database error:', error);
         if (error.message.includes('limited to 5 documents')) {
           toast({
             title: "Document Limit Reached",
             description: "Free plan users are limited to 5 documents. Upgrade to Pro for unlimited documents.",
             variant: "destructive"
           });
+        } else if (error.message.includes('Invalid document type')) {
+          toast({
+            title: "Invalid Document Type",
+            description: "Please select a valid document type from the dropdown.",
+            variant: "destructive"
+          });
         } else {
-          throw error;
+          toast({
+            title: "Error",
+            description: error.message || "Failed to add document. Please try again.",
+            variant: "destructive"
+          });
         }
         return;
       }
@@ -128,6 +141,16 @@ const MyGarage = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleUpgradeSuccess = () => {
+    // Refresh counts and page data after successful upgrade
+    refreshCounts();
+    fetchVehicles();
+    toast({
+      title: "Welcome to Pro!",
+      description: "You now have unlimited access to all features.",
+    });
   };
 
   if (loading) {

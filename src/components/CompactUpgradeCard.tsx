@@ -5,7 +5,11 @@ import { Crown, Check } from "lucide-react";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import UpgradePrompt from "@/components/settings/UpgradePrompt";
 
-const CompactUpgradeCard = () => {
+interface CompactUpgradeCardProps {
+  onUpgradeSuccess?: () => void;
+}
+
+const CompactUpgradeCard = ({ onUpgradeSuccess }: CompactUpgradeCardProps) => {
   const { userPlan } = usePlanLimits();
 
   if (userPlan.plan_type === 'pro') {
@@ -38,7 +42,7 @@ const CompactUpgradeCard = () => {
             </div>
           </div>
           <div className="ml-3">
-            <UpgradePrompt userPlan="Free" compact={true} />
+            <UpgradePrompt userPlan="Free" compact={true} onUpgradeSuccess={onUpgradeSuccess} />
           </div>
         </div>
       </CardContent>

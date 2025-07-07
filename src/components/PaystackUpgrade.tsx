@@ -45,6 +45,64 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess, compact = false }: Paysta
     });
   };
 
+  const verifyPaymentAndUpdatePlan = async (reference: string) => {
+    try {
+      console.log('Verifying payment with reference:', reference);
+      
+      const { data, error } = await supabase.functions.invoke('verify-payment', {
+        body: { reference }
+      });
+
+      console.log('Verification response:', data, error);
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.success) {
+        // Update user's plan in profiles table
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ plan_type: 'pro' })
+          .eq('id', user!.id);
+
+        if (updateError) {
+          console.error('Error updating profile plan:', updateError);
+          throw updateError;
+        }
+
+        toast({
+          title: "Subscription Activated!",
+          description: "Your Pro subscription is now active. Please refresh the page to see changes.",
+        });
+        
+        // Call the onUpgradeSuccess callback if provided
+        if (onUpgradeSuccess) {
+          setTimeout(() => {
+            onUpgradeSuccess();
+          }, 1000);
+        }
+
+        // Refresh the page to update the UI
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        throw new Error('Payment verification failed');
+      }
+
+    } catch (error: any) {
+      console.error('Payment verification error:', error);
+      toast({
+        title: "Verification Failed",
+        description: error.message || "Failed to verify payment. Please contact support.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const openPaystackPopup = (paymentData: any) => {
     const handler = window.PaystackPop.setup({
       key: config.paystack.publicKey,
@@ -58,13 +116,8 @@ const PaystackUpgrade = ({ userPlan, onUpgradeSuccess, compact = false }: Paysta
           description: "Your Pro subscription is being activated...",
         });
         
-        // Call the onUpgradeSuccess callback if provided
-        if (onUpgradeSuccess) {
-          onUpgradeSuccess();
-        }
-        
-        // Navigate to callback URL for verification
-        window.location.href = `${CALLBACK_URL}?reference=${response.reference}`;
+        // Verify payment and update plan
+        verifyPaymentAndUpdatePlan(response.reference);
       },
       onClose: function() {
         console.log('Payment popup closed');

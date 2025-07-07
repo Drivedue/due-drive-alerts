@@ -31,10 +31,21 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Map document types to database-accepted values
+    const documentTypeMapping: { [key: string]: string } = {
+      'drivers_license': 'license',
+      'vehicle_license': 'license',
+      'insurance': 'insurance',
+      'vehicle_inspection_certificate': 'inspection',
+      'road_worthiness': 'inspection',
+      'registration': 'registration',
+      'other': 'other'
+    };
+
     // Ensure all required fields are present
     const documentData = {
       title: formData.title,
-      document_type: formData.document_type,
+      document_type: documentTypeMapping[formData.document_type] || formData.document_type,
       document_number: formData.document_number || '',
       vehicle_id: formData.vehicle_id,
       issue_date: formData.issue_date || null,
