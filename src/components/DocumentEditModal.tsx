@@ -42,6 +42,7 @@ const DocumentEditModal = ({ document, onClose, onUpdate }: DocumentEditModalPro
   ];
 
   const handleInputChange = (field: string, value: string | number) => {
+    console.log(`Updating field ${field} with value:`, value);
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -49,21 +50,56 @@ const DocumentEditModal = ({ document, onClose, onUpdate }: DocumentEditModalPro
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error('No user found');
+      toast({
+        title: "Error",
+        description: "You must be logged in to update documents.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('Saving document with data:', formData);
+    console.log('Document ID:', document.id);
+    console.log('User ID:', user.id);
 
     setIsLoading(true);
 
     try {
+      const updateData = {
+        title: formData.title.trim(),
+        document_type: formData.document_type,
+        document_number: formData.document_number?.trim() || null,
+        issue_date: formData.issue_date || null,
+        expiry_date: formData.expiry_date || null,
+        notes: formData.notes?.trim() || null,
+        reminder_days: Number(formData.reminder_days) || 30,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Sending update data:', updateData);
+
       const { data, error } = await supabase
         .from('documents')
-        .update({
-          ...formData,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', document.id)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select();
 
-      if (error) throw error;
+      console.log('Update response:', { data, error });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.error('No rows were updated');
+        throw new Error('Document not found or you do not have permission to update it');
+      }
+
+      console.log('Document updated successfully:', data);
 
       toast({
         title: "Document Updated",
@@ -101,6 +137,7 @@ const DocumentEditModal = ({ document, onClose, onUpdate }: DocumentEditModalPro
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
               placeholder="Enter document title"
+              required
             />
           </div>
 
@@ -178,7 +215,11 @@ const DocumentEditModal = ({ document, onClose, onUpdate }: DocumentEditModalPro
             <Button onClick={onClose} variant="outline" className="flex-1">
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isLoading} className="flex-1">
+            <Button 
+              onClick={handleSave} 
+              disabled={isLoading || !formData.title.trim() || !formData.document_type} 
+              className="flex-1"
+            >
               {isLoading ? "Saving..." : "Save Changes"}
             </Button>
           </div>
