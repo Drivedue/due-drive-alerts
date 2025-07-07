@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import MobileLayout from "@/components/MobileLayout";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import ReminderSchedule from "@/components/settings/ReminderSchedule";
+import TestNotifications from "@/components/settings/TestNotifications";
 import AccountSettings from "@/components/settings/AccountSettings";
 import InformationSection from "@/components/settings/InformationSection";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -110,6 +111,7 @@ const Settings = () => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <NotificationSettings userPlan={userPlan} />
+            <TestNotifications />
           </CollapsibleContent>
         </Collapsible>
 
