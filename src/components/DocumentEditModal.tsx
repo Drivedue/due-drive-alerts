@@ -67,9 +67,20 @@ const DocumentEditModal = ({ document, onClose, onUpdate }: DocumentEditModalPro
     setIsLoading(true);
 
     try {
+      // Map document types to database-accepted values
+      const documentTypeMapping: { [key: string]: string } = {
+        'drivers_license': 'license',
+        'vehicle_license': 'license',
+        'insurance': 'insurance',
+        'vehicle_inspection_certificate': 'inspection',
+        'road_worthiness': 'inspection',
+        'registration': 'registration',
+        'other': 'other'
+      };
+
       const updateData = {
         title: formData.title.trim(),
-        document_type: formData.document_type,
+        document_type: documentTypeMapping[formData.document_type] || formData.document_type,
         document_number: formData.document_number?.trim() || null,
         issue_date: formData.issue_date || null,
         expiry_date: formData.expiry_date || null,
