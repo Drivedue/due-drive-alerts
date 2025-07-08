@@ -24,12 +24,13 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
     sms: false
   });
 
-  // Check if user actually has active Pro subscription
+  // Load user preferences and check Pro status
   useEffect(() => {
-    const checkProStatus = async () => {
+    const loadUserData = async () => {
       if (!user) return;
 
       try {
+        // Check Pro subscription
         const { data: subscription } = await supabase
           .from('subscriptions')
           .select('*')
@@ -40,16 +41,31 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
 
         setIsProUser(!!subscription);
         console.log('Pro subscription status:', !!subscription);
+
+        // Load user notification preferences
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('push_notifications, email_notifications, sms_notifications')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          setNotifications({
+            push: profile.push_notifications ?? true,
+            email: profile.email_notifications ?? true,
+            sms: profile.sms_notifications ?? false
+          });
+        }
       } catch (error) {
-        console.error('Error checking Pro status:', error);
+        console.error('Error loading user data:', error);
         setIsProUser(false);
       }
     };
 
-    checkProStatus();
+    loadUserData();
   }, [user, userPlan]);
 
-  const handleNotificationChange = (type: keyof typeof notifications) => {
+  const handleNotificationChange = async (type: keyof typeof notifications) => {
     // Check if trying to enable SMS without Pro subscription
     if (type === 'sms' && !notifications.sms && !isProUser) {
       toast({
@@ -60,15 +76,38 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
       return;
     }
 
-    setNotifications(prev => ({
-      ...prev,
-      [type]: !prev[type]
-    }));
+    const newValue = !notifications[type];
     
-    toast({
-      title: "Settings Updated",
-      description: `${type.toUpperCase()} notifications ${notifications[type] ? 'disabled' : 'enabled'}`,
-    });
+    try {
+      // Update in database
+      const updateField = type === 'push' ? 'push_notifications' : 
+                         type === 'email' ? 'email_notifications' : 'sms_notifications';
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [updateField]: newValue })
+        .eq('id', user?.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setNotifications(prev => ({
+        ...prev,
+        [type]: newValue
+      }));
+      
+      toast({
+        title: "Settings Updated",
+        description: `${type.toUpperCase()} notifications ${newValue ? 'enabled' : 'disabled'}`,
+      });
+    } catch (error) {
+      console.error('Error updating notification settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update notification settings",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
