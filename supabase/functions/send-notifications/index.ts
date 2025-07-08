@@ -74,39 +74,94 @@ const handler = async (req: Request): Promise<Response> => {
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     // Create notification content
-    const vehicleInfo = document.vehicles 
+    const vehicleName = document.vehicles 
+      ? `${document.vehicles.make} ${document.vehicles.model}`
+      : 'your vehicle';
+    
+    const vehicleNameOrPlate = document.vehicles 
       ? `${document.vehicles.make} ${document.vehicles.model} (${document.vehicles.license_plate})`
       : 'your vehicle';
 
-    const reminderText = {
+    const userName = profile.full_name ? profile.full_name.split(' ')[0] : 'there';
+    const documentType = document.document_type.charAt(0).toUpperCase() + document.document_type.slice(1);
+    const formattedExpiryDate = expiryDate.toLocaleDateString();
+
+    // Custom notification templates
+    const pushTemplates = {
+      '4_weeks': {
+        title: 'Early Reminder',
+        body: `${documentType} for ${vehicleNameOrPlate} expires on ${formattedExpiryDate}. Renew early to stay compliant.`
+      },
+      '3_weeks': {
+        title: "Don't Forget!",
+        body: `3 weeks left: ${vehicleName}'s ${documentType} expires on ${formattedExpiryDate}.`
+      },
+      '2_weeks': {
+        title: '2 Weeks Left!',
+        body: `Your ${documentType} for ${vehicleName} expires soon – ${formattedExpiryDate}. Renew today.`
+      },
+      '1_week': {
+        title: '1 Week Remaining',
+        body: `Reminder: ${vehicleName}'s ${documentType} expires on ${formattedExpiryDate}.`
+      },
+      '1_day': {
+        title: 'Final Alert',
+        body: `Tomorrow is the deadline! ${vehicleName}'s ${documentType} expires on ${formattedExpiryDate}.`
+      }
+    };
+
+    const smsTemplates = {
+      '4_weeks': `DriveDue: ${documentType} for ${vehicleNameOrPlate} expires on ${formattedExpiryDate}. Renew early and avoid last-minute stress.`,
+      '3_weeks': `Reminder: 3 weeks left! ${vehicleName}'s ${documentType} expires on ${formattedExpiryDate}. – DriveDue`,
+      '2_weeks': `2 weeks to go: ${vehicleName}'s ${documentType} expires on ${formattedExpiryDate}. Set your renewal in motion. – DriveDue`,
+      '1_week': `Heads up! ${documentType} for ${vehicleName} expires on ${formattedExpiryDate}. Renew to avoid penalties. – DriveDue`,
+      '1_day': `URGENT: ${documentType} for ${vehicleName} expires tomorrow (${formattedExpiryDate}). Renew now! – DriveDue`
+    };
+
+    const emailSubjects = {
+      '4_weeks': `Early Reminder: Renew ${vehicleName}'s ${documentType} Before ${formattedExpiryDate}`,
+      '3_weeks': `Still Time! 3 Weeks Left to Renew ${documentType}`,
+      '2_weeks': `Two-Week Countdown: ${vehicleName}'s ${documentType} Expires Soon`,
+      '1_week': `Only 1 Week Left to Renew ${documentType}`,
+      '1_day': `Final Reminder: ${vehicleName}'s ${documentType} Expires Tomorrow`
+    };
+
+    const reminderTimingText = {
       '4_weeks': '4 weeks',
-      '3_weeks': '3 weeks', 
+      '3_weeks': '3 weeks',
       '2_weeks': '2 weeks',
       '1_week': '1 week',
       '1_day': '1 day'
     }[reminderType];
 
+    const emailBody = `
+      <p>Hi ${userName},</p>
+      
+      <p>Just a quick reminder from your friends at <strong>DriveDue</strong></p>
+      
+      <p>Your <strong>${documentType}</strong> for <strong>${vehicleNameOrPlate}</strong> is set to expire on <strong>${formattedExpiryDate}</strong>.</p>
+      
+      <p>You're receiving this reminder ${reminderTimingText} in advance — just as you requested.</p>
+      
+      <p>To avoid penalties, late fees, or disruptions, we recommend renewing this document before the deadline.</p>
+      
+      <p>Already renewed? You can update your record in the DriveDue app anytime.</p>
+      
+      <p><strong>Need help?</strong><br>
+      drivedue.company@gmail.com | WhatsApp: +2347012975251</p>
+      
+      <p>Stay compliant,<br>
+      The DriveDue Team</p>
+    `;
+
     const templates = {
       email: {
-        subject: `${document.document_type.toUpperCase()} Expiry Reminder - ${reminderText} notice`,
-        body: `
-          <h2>Document Expiry Reminder</h2>
-          <p>Hello,</p>
-          <p>This is a reminder that your <strong>${document.document_type}</strong> document for ${vehicleInfo} will expire in ${reminderText}.</p>
-          <p><strong>Document:</strong> ${document.title}</p>
-          <p><strong>Expiry Date:</strong> ${expiryDate.toLocaleDateString()}</p>
-          <p><strong>Days Remaining:</strong> ${daysUntilExpiry}</p>
-          ${document.document_number ? `<p><strong>Document Number:</strong> ${document.document_number}</p>` : ''}
-          <p>Please ensure you renew this document before it expires to avoid any inconvenience.</p>
-          <p>Best regards,<br>DriveDue Team</p>
-        `
+        subject: emailSubjects[reminderType],
+        body: emailBody
       },
-      push: {
-        title: `${document.document_type.toUpperCase()} expires in ${reminderText}`,
-        body: `${document.title} for ${vehicleInfo} expires on ${expiryDate.toLocaleDateString()}. Renew now to stay compliant.`
-      },
+      push: pushTemplates[reminderType],
       sms: {
-        body: `DriveDue Reminder: Your ${document.document_type} "${document.title}" for ${vehicleInfo} expires in ${reminderText} (${expiryDate.toLocaleDateString()}). Renew now to avoid issues.`
+        body: smsTemplates[reminderType]
       }
     };
 
@@ -123,10 +178,10 @@ const handler = async (req: Request): Promise<Response> => {
         mergeTags: {
           document_type: document.document_type,
           document_title: document.title,
-          vehicle_info: vehicleInfo,
-          expiry_date: expiryDate.toLocaleDateString(),
+          vehicle_info: vehicleNameOrPlate,
+          expiry_date: formattedExpiryDate,
           days_remaining: daysUntilExpiry.toString(),
-          reminder_period: reminderText,
+          reminder_period: reminderTimingText,
           document_number: document.document_number || '',
           subject: templates.email.subject,
           body: templates.email.body
