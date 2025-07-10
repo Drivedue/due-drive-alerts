@@ -217,10 +217,12 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
                   });
 
                   if (error) {
-                    console.error('Sync error:', error);
+                    console.error('Sync error details:', error);
+                    // Try to get more error details
+                    console.error('Error data:', data);
                     toast({
                       title: "Sync Failed",
-                      description: "Failed to sync with NotificationAPI. Check console for details.",
+                      description: `Failed to sync with NotificationAPI: ${error.message || 'Unknown error'}`,
                       variant: "destructive"
                     });
                   } else {
