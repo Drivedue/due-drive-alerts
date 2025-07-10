@@ -186,6 +186,64 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
             disabled={!isProUser}
           />
         </div>
+
+        {/* Manual Sync Button for Testing */}
+        <div className="pt-4 border-t">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                const { data: profile } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', user?.id)
+                  .single();
+
+                if (profile) {
+                  const preferredChannels = [];
+                  if (profile.email_notifications) preferredChannels.push('email');
+                  if (profile.sms_notifications && isProUser) preferredChannels.push('sms');
+                  if (profile.push_notifications) preferredChannels.push('push');
+
+                  const { data, error } = await supabase.functions.invoke('sync-user-profile', {
+                    body: {
+                      user_id: user?.id,
+                      email: user?.email,
+                      phone: profile.phone,
+                      full_name: profile.full_name,
+                      preferred_channels: preferredChannels
+                    }
+                  });
+
+                  if (error) {
+                    console.error('Sync error:', error);
+                    toast({
+                      title: "Sync Failed",
+                      description: "Failed to sync with NotificationAPI. Check console for details.",
+                      variant: "destructive"
+                    });
+                  } else {
+                    console.log('Sync successful:', data);
+                    toast({
+                      title: "Profile Synced",
+                      description: "Your profile has been synced with NotificationAPI successfully.",
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error('Manual sync error:', error);
+                toast({
+                  title: "Sync Error",
+                  description: "An error occurred during manual sync.",
+                  variant: "destructive"
+                });
+              }
+            }}
+          >
+            Test Sync with NotificationAPI
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
