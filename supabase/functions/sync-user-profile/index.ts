@@ -18,8 +18,28 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  console.log('Sync user profile function called');
+
   try {
-    const { user_id, email, phone, full_name, preferred_channels } = await req.json();
+    const requestBody = await req.json();
+    console.log('Request body received:', requestBody);
+    
+    const { user_id, email, phone, full_name, preferred_channels } = requestBody;
+
+    // Validate required fields
+    if (!user_id || !email) {
+      console.error('Missing required fields:', { user_id, email });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Missing required fields: user_id and email are required'
+      }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      });
+    }
 
     // Create the user profile in NotificationAPI
     const notificationApiPayload = {
@@ -40,7 +60,16 @@ serve(async (req) => {
     
     if (!clientId || !apiKey) {
       console.error('Missing NotificationAPI credentials');
-      throw new Error('NotificationAPI credentials not configured');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'NotificationAPI credentials not configured'
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      });
     }
 
     console.log('Using NotificationAPI credentials:', { 
@@ -67,7 +96,17 @@ serve(async (req) => {
         statusText: response.statusText,
         body: errorData
       });
-      throw new Error(`NotificationAPI error: ${response.status} ${errorData}`);
+      
+      return new Response(JSON.stringify({
+        success: false,
+        error: `NotificationAPI error: ${response.status} ${errorData}`
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      });
     }
 
     const result = await response.json();

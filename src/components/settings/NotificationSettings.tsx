@@ -206,6 +206,14 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
                   if (profile.sms_notifications && isProUser) preferredChannels.push('sms');
                   if (profile.push_notifications) preferredChannels.push('push');
 
+                  console.log('Syncing profile with data:', {
+                    user_id: user?.id,
+                    email: user?.email,
+                    phone: profile.phone,
+                    full_name: profile.full_name,
+                    preferred_channels: preferredChannels
+                  });
+
                   const { data, error } = await supabase.functions.invoke('sync-user-profile', {
                     body: {
                       user_id: user?.id,
@@ -216,13 +224,24 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
                     }
                   });
 
+                  console.log('Function response:', { data, error });
+
                   if (error) {
                     console.error('Sync error details:', error);
-                    // Try to get more error details
                     console.error('Error data:', data);
+                    
+                    // Try to get more specific error information
+                    let errorMessage = 'Unknown error';
+                    if (typeof error === 'object' && error.message) {
+                      errorMessage = error.message;
+                    }
+                    if (data && typeof data === 'object' && data.error) {
+                      errorMessage = data.error;
+                    }
+                    
                     toast({
                       title: "Sync Failed",
-                      description: `Failed to sync with NotificationAPI: ${error.message || 'Unknown error'}`,
+                      description: `Failed to sync with NotificationAPI: ${errorMessage}`,
                       variant: "destructive"
                     });
                   } else {
