@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, fullName: string, phone: string) => {
     const redirectUrl = `${window.location.origin}/dashboard`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -70,6 +70,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: error.message,
         variant: "destructive"
       });
+    } else if (data.user) {
+      // Sync user profile with NotificationAPI
+      try {
+        await supabase.functions.invoke('sync-user-profile', {
+          body: {
+            user_id: data.user.id,
+            email: email,
+            phone: phone,
+            full_name: fullName,
+            preferred_channels: ['email'] // Default to email notifications
+          }
+        });
+      } catch (syncError) {
+        console.error('Error syncing new user with NotificationAPI:', syncError);
+        // Don't block signup for this error
+      }
     }
 
     return { error };

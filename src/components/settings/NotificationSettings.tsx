@@ -95,6 +95,34 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
         ...prev,
         [type]: newValue
       }));
+
+      // Sync with NotificationAPI
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user?.id)
+          .single();
+
+        if (profile) {
+          const preferredChannels = [];
+          if (profile.email_notifications) preferredChannels.push('email');
+          if (profile.sms_notifications && isProUser) preferredChannels.push('sms');
+
+          await supabase.functions.invoke('sync-user-profile', {
+            body: {
+              user_id: user?.id,
+              email: user?.email,
+              phone: profile.phone,
+              full_name: profile.full_name,
+              preferred_channels: preferredChannels
+            }
+          });
+        }
+      } catch (syncError) {
+        console.error('Error syncing with NotificationAPI:', syncError);
+        // Don't show error to user as the main operation succeeded
+      }
       
       toast({
         title: "Settings Updated",
