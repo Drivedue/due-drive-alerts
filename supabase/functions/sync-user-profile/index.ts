@@ -77,29 +77,36 @@ serve(async (req) => {
       apiKey: apiKey ? 'Present' : 'Missing' 
     });
 
-    // Send to NotificationAPI
-    const response = await fetch('https://api.notificationapi.com/api/v1/users', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(clientId + ':' + apiKey)}`
-      },
-      body: JSON.stringify(notificationApiPayload)
-    });
-
-    console.log('NotificationAPI response status:', response.status);
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('NotificationAPI error response:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorData
+    // Use NotificationAPI SDK to create/update user
+    try {
+      await notificationapi.createUser({
+        id: user_id,
+        email: email,
+        number: phone || undefined,
+        pushTokens: [], // Can be updated later
+        preferences: {
+          channels: preferred_channels || ['email']
+        }
       });
+
+      console.log('User profile synced successfully with NotificationAPI SDK');
+      
+      return new Response(JSON.stringify({
+        success: true,
+        data: { message: 'User profile synced successfully' }
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      });
+    } catch (sdkError) {
+      console.error('NotificationAPI SDK error:', sdkError);
       
       return new Response(JSON.stringify({
         success: false,
-        error: `NotificationAPI error: ${response.status} ${errorData}`
+        error: `NotificationAPI SDK error: ${sdkError.message}`
       }), {
         status: 500,
         headers: {
@@ -108,20 +115,6 @@ serve(async (req) => {
         }
       });
     }
-
-    const result = await response.json();
-    console.log('User profile synced successfully:', result);
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: result
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders
-      }
-    });
   } catch (error) {
     console.error('Sync user profile error:', error);
     return new Response(JSON.stringify({
