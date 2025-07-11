@@ -9,7 +9,7 @@ const corsHeaders = {
 
 notificationapi.init(
   Deno.env.get("NOTIFICATIONAPI_CLIENT_ID")!,
-  Deno.env.get("NOTIFICATIONAPI_API_KEY")!
+  Deno.env.get("NOTIFICATIONAPI_CLIENT_SECRET")!
 );
 
 serve(async (req) => {
@@ -56,9 +56,9 @@ serve(async (req) => {
 
     // Check if required environment variables exist
     const clientId = Deno.env.get("NOTIFICATIONAPI_CLIENT_ID");
-    const apiKey = Deno.env.get("NOTIFICATIONAPI_API_KEY");
+    const clientSecret = Deno.env.get("NOTIFICATIONAPI_CLIENT_SECRET");
     
-    if (!clientId || !apiKey) {
+    if (!clientId || !clientSecret) {
       console.error('Missing NotificationAPI credentials');
       return new Response(JSON.stringify({
         success: false,
@@ -74,7 +74,7 @@ serve(async (req) => {
 
     console.log('Using NotificationAPI credentials:', { 
       clientId: clientId ? 'Present' : 'Missing',
-      apiKey: apiKey ? 'Present' : 'Missing' 
+      clientSecret: clientSecret ? 'Present' : 'Missing' 
     });
 
     // Use NotificationAPI SDK to create/update user
