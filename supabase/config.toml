@@ -9,3 +9,6 @@ verify_jwt = true
 
 [functions.sync-user-profile]
 verify_jwt = true
+
+[functions.send-welcome-notification]
+verify_jwt = true
