@@ -9,7 +9,7 @@ const corsHeaders = {
 
 notificationapi.init(
   Deno.env.get("NOTIFICATIONAPI_CLIENT_ID")!,
-  Deno.env.get("NOTIFICATIONAPI_API_KEY")!
+  Deno.env.get("NOTIFICATIONAPI_CLIENT_SECRET")!
 );
 
 // Initialize Supabase client with service role key for server-side operations
