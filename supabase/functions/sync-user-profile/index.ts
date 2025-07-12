@@ -79,7 +79,7 @@ serve(async (req) => {
 
     // Use NotificationAPI SDK to create/update user
     try {
-      await notificationapi.createUser({
+      const userPayload = {
         id: user_id,
         email: email,
         number: phone || undefined,
@@ -87,7 +87,11 @@ serve(async (req) => {
         preferences: {
           channels: preferred_channels || ['email']
         }
-      });
+      };
+
+      console.log('Creating/updating user with payload:', userPayload);
+      
+      await notificationapi.createUser(userPayload);
 
       console.log('User profile synced successfully with NotificationAPI SDK');
       
@@ -103,10 +107,16 @@ serve(async (req) => {
       });
     } catch (sdkError) {
       console.error('NotificationAPI SDK error:', sdkError);
+      console.error('SDK Error details:', {
+        name: sdkError.name,
+        message: sdkError.message,
+        stack: sdkError.stack
+      });
       
       return new Response(JSON.stringify({
         success: false,
-        error: `NotificationAPI SDK error: ${sdkError.message}`
+        error: `NotificationAPI SDK error: ${sdkError.message || 'Unknown error'}`,
+        details: sdkError.toString()
       }), {
         status: 500,
         headers: {
