@@ -9,7 +9,7 @@ const corsHeaders = {
 
 notificationapi.init(
   Deno.env.get("NOTIFICATIONAPI_CLIENT_ID")!,
-  Deno.env.get("NOTIFICATIONAPI_CLIENT_SECRET")!
+  Deno.env.get("NOTIFICATIONAPI_API_KEY")!
 );
 
 serve(async (req) => {
@@ -56,7 +56,7 @@ serve(async (req) => {
 
     // Check if required environment variables exist
     const clientId = Deno.env.get("NOTIFICATIONAPI_CLIENT_ID");
-    const clientSecret = Deno.env.get("NOTIFICATIONAPI_CLIENT_SECRET");
+    const clientSecret = Deno.env.get("NOTIFICATIONAPI_API_KEY");
     
     if (!clientId || !clientSecret) {
       console.error('Missing NotificationAPI credentials');
