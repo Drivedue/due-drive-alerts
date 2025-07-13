@@ -78,7 +78,7 @@ serve(async (req) => {
 
       console.log('Creating/updating user with payload:', userPayload);
       
-      await notificationapi.createUser(userPayload);
+      await notificationapi.users.identify(userPayload);
 
       console.log('User profile synced successfully with NotificationAPI SDK');
       
