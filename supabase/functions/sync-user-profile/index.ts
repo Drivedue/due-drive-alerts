@@ -41,19 +41,6 @@ serve(async (req) => {
       });
     }
 
-    // Create the user profile in NotificationAPI
-    const notificationApiPayload = {
-      user_id: user_id,
-      email: email,
-      phone_number: phone,
-      properties: {
-        name: full_name || '',
-        preferred_channels: preferred_channels || ['email']
-      }
-    };
-
-    console.log('Syncing user profile to NotificationAPI:', notificationApiPayload);
-
     // Check if required environment variables exist
     const clientId = Deno.env.get("NOTIFICATIONAPI_CLIENT_ID");
     const clientSecret = Deno.env.get("NOTIFICATIONAPI_CLIENT_SECRET");
