@@ -109,16 +109,28 @@ const Profile = () => {
     if (!user) return;
 
     try {
+      console.log('Saving profile with data:', {
+        id: user.id,
+        full_name: formData.fullName,
+        phone: formData.phone
+      });
+
       // Update or insert profile
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
           full_name: formData.fullName,
           phone: formData.phone
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile update error:', error);
+        throw error;
+      }
+
+      console.log('Profile updated successfully:', data);
 
       toast({
         title: "Profile Updated",
