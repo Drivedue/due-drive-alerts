@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import notificationapi from 'npm:notificationapi-node-server-sdk';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,8 +20,11 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const notificationApiKey = Deno.env.get("NOTIFICATIONAPI_API_KEY")!;
+    const notificationClientSecret = Deno.env.get("NOTIFICATIONAPI_CLIENT_SECRET")!;
     const notificationClientId = Deno.env.get("NOTIFICATIONAPI_CLIENT_ID")!;
+    
+    // Initialize NotificationAPI
+    notificationapi.init(notificationClientId, notificationClientSecret);
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -218,25 +222,17 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Send notifications via NotificationAPI
+    // Send notifications via NotificationAPI SDK
     const results = [];
     for (const notification of notifications) {
       try {
-        const response = await fetch('https://api.notificationapi.com/notifications', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${btoa(`${notificationClientId}:${notificationApiKey}`)}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(notification)
+        await notificationapi.send({
+          notificationId: notification.notificationId,
+          user: notification.user,
+          mergeTags: notification.mergeTags
         });
-
-        if (!response.ok) {
-          throw new Error(`NotificationAPI error: ${await response.text()}`);
-        }
-
-        const result = await response.json();
-        results.push({ type: notification.notificationId, success: true, result });
+        
+        results.push({ type: notification.notificationId, success: true });
       } catch (error) {
         console.error(`Failed to send ${notification.notificationId}:`, error);
         results.push({ type: notification.notificationId, success: false, error: error.message });
