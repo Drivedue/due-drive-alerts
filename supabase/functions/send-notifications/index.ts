@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import notificationapi from 'npm:notificationapi-node-server-sdk';
+import { NotificationAPI } from 'npm:notificationapi-node-server-sdk';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,7 +24,10 @@ const handler = async (req: Request): Promise<Response> => {
     const notificationClientId = Deno.env.get("NOTIFICATIONAPI_CLIENT_ID")!;
     
     // Initialize NotificationAPI
-    notificationapi.init(notificationClientId, notificationClientSecret);
+    const notificationapi = new NotificationAPI({
+      clientId: notificationClientId,
+      clientSecret: notificationClientSecret
+    });
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 

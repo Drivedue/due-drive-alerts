@@ -1,16 +1,17 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
-import notificationapi from 'npm:notificationapi-node-server-sdk';
+import { NotificationAPI } from 'npm:notificationapi-node-server-sdk';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-notificationapi.init(
-  Deno.env.get("NOTIFICATIONAPI_CLIENT_ID")!,
-  Deno.env.get("NOTIFICATIONAPI_CLIENT_SECRET")!
-);
+// Initialize NotificationAPI
+const notificationapi = new NotificationAPI({
+  clientId: Deno.env.get("NOTIFICATIONAPI_CLIENT_ID")!,
+  clientSecret: Deno.env.get("NOTIFICATIONAPI_CLIENT_SECRET")!
+});
 
 // Initialize Supabase client with service role key for server-side operations
 const supabase = createClient(
@@ -82,7 +83,7 @@ serve(async (req) => {
 
     // Create/update user in NotificationAPI
     try {
-      await notificationapi.createUser({
+      await notificationapi.users.identify({
         id: userId,
         email: authUser.user.email,
         number: record.phone || undefined,
