@@ -87,21 +87,15 @@ const handler = async (req: Request): Promise<Response> => {
     const results = [];
     for (const notification of notifications) {
       try {
-        const response = await fetch(`${supabaseUrl}/functions/v1/send-notifications`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(notification)
+        const { data: result, error: functionError } = await supabase.functions.invoke('send-notifications', {
+          body: notification
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          results.push({ ...notification, success: true, result });
+        if (functionError) {
+          console.error(`Function error for document ${notification.documentId}:`, functionError);
+          results.push({ ...notification, success: false, error: functionError.message || 'Unknown error' });
         } else {
-          const error = await response.text();
-          results.push({ ...notification, success: false, error });
+          results.push({ ...notification, success: true, result });
         }
       } catch (error) {
         console.error(`Failed to send notification for document ${notification.documentId}:`, error);
