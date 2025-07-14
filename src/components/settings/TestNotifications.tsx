@@ -12,17 +12,30 @@ const TestNotifications = () => {
   const testNotificationSystem = async () => {
     setTesting(true);
     try {
+      console.log('Starting notification system test...');
+      
       // Trigger the document expiry check function
       const { data, error } = await supabase.functions.invoke('check-expiring-documents');
       
-      if (error) throw error;
+      console.log('Function response:', { data, error });
+      
+      if (error) {
+        console.error('Function error:', error);
+        throw error;
+      }
 
       toast({
         title: "Notification Test Complete",
-        description: data.message || "Test completed successfully",
+        description: data?.message || "Test completed successfully",
       });
     } catch (error: any) {
       console.error('Test notification error:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      
       toast({
         title: "Test Failed",
         description: error.message || "Failed to test notification system",
