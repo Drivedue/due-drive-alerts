@@ -9,6 +9,7 @@ import VehicleImageUpload from "@/components/VehicleImageUpload";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import QuickStats from "@/components/dashboard/QuickStats";
 import UpcomingRenewals from "@/components/dashboard/UpcomingRenewals";
+import InAppNotifications from "@/components/InAppNotifications";
 import { usePayment } from "@/hooks/usePayment";
 
 const Dashboard = () => {
@@ -174,6 +175,11 @@ const Dashboard = () => {
         documentCount={stats.documentCount}
         expiredCount={stats.expiredCount}
       />
+
+      {/* In-App Push Notifications for Premium Users */}
+      <div className="mb-6">
+        <InAppNotifications />
+      </div>
 
       <UpcomingRenewals
         renewals={upcomingRenewals}
