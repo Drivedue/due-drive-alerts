@@ -193,12 +193,26 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
             variant="outline"
             size="sm"
             onClick={async () => {
+              console.log('=== Starting Manual Sync Test ===');
               try {
-                const { data: profile } = await supabase
+                console.log('Fetching user profile for ID:', user?.id);
+                const { data: profile, error: profileError } = await supabase
                   .from('profiles')
                   .select('*')
                   .eq('id', user?.id)
                   .single();
+
+                console.log('Profile fetch result:', { profile, profileError });
+
+                if (profileError) {
+                  console.error('Profile fetch error:', profileError);
+                  toast({
+                    title: "Profile Error",
+                    description: `Failed to fetch profile: ${profileError.message}`,
+                    variant: "destructive"
+                  });
+                  return;
+                }
 
                 if (profile) {
                   const preferredChannels = [];
@@ -206,60 +220,69 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
                   if (profile.sms_notifications && isProUser) preferredChannels.push('sms');
                   if (profile.push_notifications) preferredChannels.push('push');
 
-                  console.log('Syncing profile with data:', {
+                  const syncData = {
                     user_id: user?.id,
                     email: user?.email,
                     phone: profile.phone,
                     full_name: profile.full_name,
                     preferred_channels: preferredChannels
-                  });
+                  };
+
+                  console.log('Syncing profile with data:', syncData);
+                  console.log('Calling sync-user-profile function...');
 
                   const { data, error } = await supabase.functions.invoke('sync-user-profile', {
-                    body: {
-                      user_id: user?.id,
-                      email: user?.email,
-                      phone: profile.phone,
-                      full_name: profile.full_name,
-                      preferred_channels: preferredChannels
-                    }
+                    body: syncData
                   });
 
                   console.log('Function response:', { data, error });
+                  console.log('Function response data type:', typeof data);
+                  console.log('Function response error type:', typeof error);
 
                   if (error) {
                     console.error('Sync error details:', error);
-                    console.error('Error data:', data);
+                    console.error('Error keys:', Object.keys(error));
+                    console.error('Error JSON:', JSON.stringify(error, null, 2));
                     
-                    // Try to get more specific error information
                     let errorMessage = 'Unknown error';
-                    if (typeof error === 'object' && error.message) {
-                      errorMessage = error.message;
-                    }
-                    if (data && typeof data === 'object' && data.error) {
-                      errorMessage = data.error;
-                    }
+                    if (error.message) errorMessage = error.message;
+                    if (error.details) errorMessage += ` - ${error.details}`;
+                    if (error.hint) errorMessage += ` (${error.hint})`;
                     
                     toast({
                       title: "Sync Failed",
-                      description: `Failed to sync with NotificationAPI: ${errorMessage}`,
+                      description: errorMessage,
                       variant: "destructive"
                     });
                   } else {
-                    console.log('Sync successful:', data);
+                    console.log('Sync successful with data:', data);
                     toast({
                       title: "Profile Synced",
-                      description: "Your profile has been synced with NotificationAPI successfully.",
+                      description: data?.message || "Your profile has been synced with NotificationAPI successfully.",
                     });
                   }
+                } else {
+                  console.error('No profile found for user');
+                  toast({
+                    title: "No Profile",
+                    description: "No profile found for current user.",
+                    variant: "destructive"
+                  });
                 }
-              } catch (error) {
-                console.error('Manual sync error:', error);
+              } catch (error: any) {
+                console.error('=== Manual sync catch block error ===');
+                console.error('Error name:', error.name);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                console.error('Full error object:', error);
+                
                 toast({
                   title: "Sync Error",
-                  description: "An error occurred during manual sync.",
+                  description: error.message || "An unexpected error occurred during manual sync.",
                   variant: "destructive"
                 });
               }
+              console.log('=== Manual Sync Test Complete ===');
             }}
           >
             Test Sync with NotificationAPI
