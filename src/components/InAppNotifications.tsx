@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, X, Calendar, Car, AlertTriangle } from "lucide-react";
+import { Bell, X, Calendar, Car, AlertTriangle, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,11 +24,20 @@ const InAppNotifications = () => {
   const { toast } = useToast();
   const [expiringDocuments, setExpiringDocuments] = useState<ExpiringDocument[]>([]);
   const [isProUser, setIsProUser] = useState(false);
-  const [dismissed, setDismissed] = useState<string[]>([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [hasShownToday, setHasShownToday] = useState(false);
 
   useEffect(() => {
     const checkUserAndDocuments = async () => {
       if (!user) return;
+
+      // Check if already shown today
+      const today = new Date().toDateString();
+      const lastShown = localStorage.getItem(`drivedue_notification_shown_${user.id}`);
+      if (lastShown === today) {
+        setHasShownToday(true);
+        return;
+      }
 
       // Check if user is Pro
       const { data: subscription } = await supabase
@@ -67,12 +76,21 @@ const InAppNotifications = () => {
         return;
       }
 
-      // Sort by expiry date (soonest first)
-      const sortedDocuments = documents?.sort((a, b) => 
-        new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime()
-      ) || [];
+      // Filter for high priority notifications (expiring within 7 days)
+      const urgentDocuments = documents?.filter(doc => {
+        const daysUntilExpiry = getDaysUntilExpiry(doc.expiry_date);
+        return daysUntilExpiry <= 7;
+      }) || [];
 
-      setExpiringDocuments(sortedDocuments);
+      if (urgentDocuments.length > 0) {
+        // Sort by expiry date (soonest first)
+        const sortedDocuments = urgentDocuments.sort((a, b) => 
+          new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime()
+        );
+
+        setExpiringDocuments(sortedDocuments);
+        setShowPopup(true);
+      }
     };
 
     checkUserAndDocuments();
@@ -102,87 +120,111 @@ const InAppNotifications = () => {
     }
   };
 
-  const dismissNotification = (documentId: string) => {
-    setDismissed(prev => [...prev, documentId]);
+  const handleDismiss = () => {
+    if (!user) return;
+    
+    // Mark as shown for today
+    const today = new Date().toDateString();
+    localStorage.setItem(`drivedue_notification_shown_${user.id}`, today);
+    setHasShownToday(true);
+    setShowPopup(false);
+    
     toast({
-      title: "Notification dismissed",
+      title: "Notifications dismissed",
       description: "You can view all expiring documents in the Documents section.",
     });
   };
 
-  const visibleDocuments = expiringDocuments.filter(doc => !dismissed.includes(doc.id));
+  const handleMarkAllRead = () => {
+    handleDismiss();
+    toast({
+      title: "All notifications marked as read",
+      description: "Great! Stay on top of your document renewals.",
+    });
+  };
 
-  if (!isProUser || visibleDocuments.length === 0) return null;
+  // Don't show if not pro user, no documents, or already shown today
+  if (!isProUser || expiringDocuments.length === 0 || hasShownToday) return null;
 
   return (
-    <div className="space-y-3">
-      {visibleDocuments.map((document) => {
-        const daysUntilExpiry = getDaysUntilExpiry(document.expiry_date);
-        const urgency = getUrgencyLevel(daysUntilExpiry);
-        const vehicleInfo = document.vehicles 
-          ? `${document.vehicles.make} ${document.vehicles.model} (${document.vehicles.license_plate})`
-          : 'your vehicle';
+    <Dialog open={showPopup} onOpenChange={setShowPopup}>
+      <DialogContent className="max-w-md animate-scale-in">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-full bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <span>Urgent Document Alerts</span>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          <p className="text-sm text-muted-foreground mb-4">
+            The following documents are expiring soon and require your attention:
+          </p>
+          
+          {expiringDocuments.map((document) => {
+            const daysUntilExpiry = getDaysUntilExpiry(document.expiry_date);
+            const urgency = getUrgencyLevel(daysUntilExpiry);
+            const vehicleInfo = document.vehicles 
+              ? `${document.vehicles.make} ${document.vehicles.model} (${document.vehicles.license_plate})`
+              : 'your vehicle';
 
-        return (
-          <Card key={document.id} className="border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-transparent">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="flex-shrink-0 mt-1">
-                    {urgency === 'critical' ? (
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                    ) : (
-                      <Bell className="h-5 w-5 text-primary" />
-                    )}
+            return (
+              <div 
+                key={document.id} 
+                className="p-4 rounded-lg border border-destructive/20 bg-destructive/5 space-y-2 animate-fade-in"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm">{document.title}</h4>
+                  <Badge variant={getUrgencyColor(urgency)} className="text-xs">
+                    {daysUntilExpiry === 0 ? 'Expires Today!' :
+                     daysUntilExpiry === 1 ? 'Expires Tomorrow!' :
+                     `${daysUntilExpiry} days left`}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Car className="h-3 w-3" />
+                    <span>{vehicleInfo}</span>
                   </div>
-                  
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-semibold text-sm">
-                        {document.title}
-                      </h4>
-                      <Badge variant={getUrgencyColor(urgency)} className="text-xs">
-                        {daysUntilExpiry === 0 ? 'Expires Today' :
-                         daysUntilExpiry === 1 ? 'Expires Tomorrow' :
-                         `${daysUntilExpiry} days left`}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Car className="h-3 w-3" />
-                        <span>{vehicleInfo}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>Expires: {new Date(document.expiry_date).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    
-                    <p className="text-xs text-muted-foreground">
-                      {urgency === 'critical' 
-                        ? 'Urgent: This document expires very soon! Renew immediately to avoid penalties.'
-                        : urgency === 'high'
-                        ? 'Important: Please renew this document soon to stay compliant.'
-                        : 'Reminder: This document will expire soon. Consider renewing early.'}
-                    </p>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>{new Date(document.expiry_date).toLocaleDateString()}</span>
                   </div>
                 </div>
                 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => dismissNotification(document.id)}
-                  className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <p className="text-xs text-muted-foreground">
+                  {urgency === 'critical' 
+                    ? '🚨 Critical: Renew immediately to avoid penalties!'
+                    : '⚠️ Important: Please renew soon to stay compliant.'}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+            );
+          })}
+        </div>
+        
+        <div className="flex flex-col gap-2 pt-4 border-t">
+          <Button 
+            onClick={handleMarkAllRead}
+            className="w-full flex items-center gap-2"
+          >
+            <CheckCircle className="h-4 w-4" />
+            Mark All as Read
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleDismiss}
+            className="w-full"
+          >
+            Dismiss for Today
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

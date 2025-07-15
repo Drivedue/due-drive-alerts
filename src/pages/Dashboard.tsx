@@ -176,10 +176,8 @@ const Dashboard = () => {
         expiredCount={stats.expiredCount}
       />
 
-      {/* In-App Push Notifications for Premium Users */}
-      <div className="mb-6">
-        <InAppNotifications />
-      </div>
+      {/* In-App Push Notification Popup for Premium Users */}
+      <InAppNotifications />
 
       <UpcomingRenewals
         renewals={upcomingRenewals}
