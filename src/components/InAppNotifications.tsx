@@ -26,6 +26,7 @@ const InAppNotifications = () => {
   const [isProUser, setIsProUser] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [hasShownToday, setHasShownToday] = useState(false);
+  const [inAppNotificationsEnabled, setInAppNotificationsEnabled] = useState(true);
 
   useEffect(() => {
     const checkUserAndDocuments = async () => {
@@ -39,7 +40,7 @@ const InAppNotifications = () => {
         return;
       }
 
-      // Check if user is Pro
+      // Check if user is Pro and has in-app notifications enabled
       const { data: subscription } = await supabase
         .from('subscriptions')
         .select('*')
@@ -52,6 +53,18 @@ const InAppNotifications = () => {
       setIsProUser(isPro);
 
       if (!isPro) return; // Only show notifications for Pro users
+
+      // Check if in-app notifications are enabled
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('in_app_notifications')
+        .eq('id', user.id)
+        .single();
+
+      const inAppEnabled = profile?.in_app_notifications ?? true;
+      setInAppNotificationsEnabled(inAppEnabled);
+
+      if (!inAppEnabled) return; // Don't show if in-app notifications are disabled
 
       // Get documents expiring in the next 30 days
       const now = new Date();
@@ -143,8 +156,8 @@ const InAppNotifications = () => {
     });
   };
 
-  // Don't show if not pro user, no documents, or already shown today
-  if (!isProUser || expiringDocuments.length === 0 || hasShownToday) return null;
+  // Don't show if not pro user, no documents, already shown today, or in-app notifications disabled
+  if (!isProUser || !inAppNotificationsEnabled || expiringDocuments.length === 0 || hasShownToday) return null;
 
   return (
     <Dialog open={showPopup} onOpenChange={setShowPopup}>

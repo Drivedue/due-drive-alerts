@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Mail, MessageSquare } from "lucide-react";
+import { Bell, Mail, MessageSquare, Monitor } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,8 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
   const [notifications, setNotifications] = useState({
     push: true,
     email: true,
-    sms: false
+    sms: false,
+    inApp: true
   });
 
   // Load user preferences and check Pro status
@@ -45,7 +46,7 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
         // Load user notification preferences
         const { data: profile } = await supabase
           .from('profiles')
-          .select('push_notifications, email_notifications, sms_notifications')
+          .select('push_notifications, email_notifications, sms_notifications, in_app_notifications')
           .eq('id', user.id)
           .single();
 
@@ -53,7 +54,8 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
           setNotifications({
             push: profile.push_notifications ?? true,
             email: profile.email_notifications ?? true,
-            sms: profile.sms_notifications ?? false
+            sms: profile.sms_notifications ?? false,
+            inApp: profile.in_app_notifications ?? true
           });
         }
       } catch (error) {
@@ -81,7 +83,8 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
     try {
       // Update in database
       const updateField = type === 'push' ? 'push_notifications' : 
-                         type === 'email' ? 'email_notifications' : 'sms_notifications';
+                         type === 'email' ? 'email_notifications' : 
+                         type === 'sms' ? 'sms_notifications' : 'in_app_notifications';
       
       const { error } = await supabase
         .from('profiles')
@@ -184,6 +187,17 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
             checked={notifications.sms}
             onCheckedChange={() => handleNotificationChange('sms')}
             disabled={!isProUser}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Monitor className="h-4 w-4 text-gray-600" />
+            <span>In-App Notifications</span>
+          </div>
+          <Switch
+            checked={notifications.inApp}
+            onCheckedChange={() => handleNotificationChange('inApp')}
           />
         </div>
 

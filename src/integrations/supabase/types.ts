@@ -108,6 +108,7 @@ export type Database = {
           email_notifications: boolean | null
           full_name: string | null
           id: string
+          in_app_notifications: boolean | null
           phone: string | null
           plan_type: string | null
           profile_image: string | null
@@ -126,6 +127,7 @@ export type Database = {
           email_notifications?: boolean | null
           full_name?: string | null
           id: string
+          in_app_notifications?: boolean | null
           phone?: string | null
           plan_type?: string | null
           profile_image?: string | null
@@ -144,6 +146,7 @@ export type Database = {
           email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          in_app_notifications?: boolean | null
           phone?: string | null
           plan_type?: string | null
           profile_image?: string | null
