@@ -72,16 +72,16 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center p-4 z-50 safe-area-bottom">
+      <Card className="w-full max-w-md max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Add New Document</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="flex-1 overflow-y-auto">
+          <form id="document-form" onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="title">Document Title</Label>
               <Input
@@ -190,16 +190,16 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
               />
             </div>
             
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1 bg-[#0A84FF] hover:bg-[#0A84FF]/90">
-                Save Document
-              </Button>
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-                Cancel
-              </Button>
-            </div>
           </form>
         </CardContent>
+        <div className="flex gap-2 p-6 pt-4 border-t bg-card">
+          <Button type="submit" form="document-form" className="flex-1 bg-primary hover:bg-primary/90">
+            Save Document
+          </Button>
+          <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            Cancel
+          </Button>
+        </div>
       </Card>
     </div>
   );
