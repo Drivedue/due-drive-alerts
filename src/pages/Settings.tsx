@@ -2,8 +2,6 @@
 import { useEffect, useState } from "react";
 import MobileLayout from "@/components/MobileLayout";
 import NotificationSettings from "@/components/settings/NotificationSettings";
-import ReminderSchedule from "@/components/settings/ReminderSchedule";
-import TestNotifications from "@/components/settings/TestNotifications";
 import AccountSettings from "@/components/settings/AccountSettings";
 import InformationSection from "@/components/settings/InformationSection";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -18,8 +16,7 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const [userPlan, setUserPlan] = useState("Free");
   const [profile, setProfile] = useState<any>(null);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [remindersOpen, setRemindersOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(true);
   const [accountOpen, setAccountOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -97,13 +94,13 @@ const Settings = () => {
   return (
     <ProtectedRoute>
       <MobileLayout title="Settings">
-        {/* Notifications Section */}
+        {/* Smart Notifications Section */}
         <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
           <CollapsibleTrigger className="w-full">
             <Card className="mb-4 cursor-pointer hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Notifications</CardTitle>
+                  <CardTitle className="text-lg">Smart Notifications</CardTitle>
                   <ChevronDown className={`h-4 w-4 transition-transform ${notificationsOpen ? 'rotate-180' : ''}`} />
                 </div>
               </CardHeader>
@@ -111,24 +108,6 @@ const Settings = () => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <NotificationSettings userPlan={userPlan} />
-            <TestNotifications />
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Reminders Section */}
-        <Collapsible open={remindersOpen} onOpenChange={setRemindersOpen}>
-          <CollapsibleTrigger className="w-full">
-            <Card className="mb-4 cursor-pointer hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Reminder Schedule</CardTitle>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${remindersOpen ? 'rotate-180' : ''}`} />
-                </div>
-              </CardHeader>
-            </Card>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <ReminderSchedule />
           </CollapsibleContent>
         </Collapsible>
 

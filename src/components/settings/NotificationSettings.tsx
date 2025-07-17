@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +40,6 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
           .single();
 
         setIsProUser(!!subscription);
-        console.log('Pro subscription status:', !!subscription);
 
         // Load user notification preferences
         const { data: profile } = await supabase
@@ -99,37 +97,18 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
         [type]: newValue
       }));
 
-      // Sync with NotificationAPI
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user?.id)
-          .single();
-
-        if (profile) {
-          const preferredChannels = [];
-          if (profile.email_notifications) preferredChannels.push('email');
-          if (profile.sms_notifications && isProUser) preferredChannels.push('sms');
-
-          await supabase.functions.invoke('sync-user-profile', {
-            body: {
-              user_id: user?.id,
-              email: user?.email,
-              phone: profile.phone,
-              full_name: profile.full_name,
-              preferred_channels: preferredChannels
-            }
-          });
+      // Auto-sync with NotificationAPI in background
+      supabase.functions.invoke('auto-sync-user-profile', {
+        body: {
+          user_id: user?.id,
+          updated_field: updateField,
+          new_value: newValue
         }
-      } catch (syncError) {
-        console.error('Error syncing with NotificationAPI:', syncError);
-        // Don't show error to user as the main operation succeeded
-      }
+      }).catch(error => console.error('Background sync error:', error));
       
       toast({
         title: "Settings Updated",
-        description: `${type.toUpperCase()} notifications ${newValue ? 'enabled' : 'disabled'}`,
+        description: `${type.charAt(0).toUpperCase() + type.slice(1)} notifications ${newValue ? 'enabled' : 'disabled'}`,
       });
     } catch (error) {
       console.error('Error updating notification settings:', error);
@@ -146,15 +125,20 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <Bell className="h-5 w-5" />
-          Notifications
+          Smart Notifications
         </CardTitle>
-        <CardDescription>Choose how you want to be notified</CardDescription>
+        <CardDescription>
+          Automatic reminders before your documents expire (4 weeks, 3 weeks, 2 weeks, 1 week, and 1 day)
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Bell className="h-4 w-4 text-gray-600" />
-            <span>Push Notifications</span>
+            <Bell className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="font-medium">Push Notifications</div>
+              <div className="text-xs text-muted-foreground">Instant alerts on your device</div>
+            </div>
           </div>
           <Switch
             checked={notifications.push}
@@ -164,8 +148,11 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Mail className="h-4 w-4 text-gray-600" />
-            <span>Email Notifications</span>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="font-medium">Email Notifications</div>
+              <div className="text-xs text-muted-foreground">Detailed reminders in your inbox</div>
+            </div>
           </div>
           <Switch
             checked={notifications.email}
@@ -175,12 +162,15 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <MessageSquare className="h-4 w-4 text-gray-600" />
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
             <div>
-              <span>SMS Notifications</span>
-              {!isProUser && (
-                <Badge variant="secondary" className="ml-2 text-xs">Pro Only</Badge>
-              )}
+              <div className="font-medium flex items-center gap-2">
+                SMS Notifications
+                {!isProUser && (
+                  <Badge variant="secondary" className="text-xs">Pro Only</Badge>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground">Text message alerts</div>
             </div>
           </div>
           <Switch
@@ -192,8 +182,11 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Monitor className="h-4 w-4 text-gray-600" />
-            <span>In-App Notifications</span>
+            <Monitor className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="font-medium">In-App Notifications</div>
+              <div className="text-xs text-muted-foreground">Pop-up alerts when using the app</div>
+            </div>
           </div>
           <Switch
             checked={notifications.inApp}
@@ -201,106 +194,12 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
           />
         </div>
 
-        {/* Manual Sync Button for Testing */}
         <div className="pt-4 border-t">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={async () => {
-              console.log('=== Starting Manual Sync Test ===');
-              try {
-                console.log('Fetching user profile for ID:', user?.id);
-                const { data: profile, error: profileError } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', user?.id)
-                  .single();
-
-                console.log('Profile fetch result:', { profile, profileError });
-
-                if (profileError) {
-                  console.error('Profile fetch error:', profileError);
-                  toast({
-                    title: "Profile Error",
-                    description: `Failed to fetch profile: ${profileError.message}`,
-                    variant: "destructive"
-                  });
-                  return;
-                }
-
-                if (profile) {
-                  const preferredChannels = [];
-                  if (profile.email_notifications) preferredChannels.push('email');
-                  if (profile.sms_notifications && isProUser) preferredChannels.push('sms');
-                  if (profile.push_notifications) preferredChannels.push('push');
-
-                  const syncData = {
-                    user_id: user?.id,
-                    email: user?.email,
-                    phone: profile.phone,
-                    full_name: profile.full_name,
-                    preferred_channels: preferredChannels
-                  };
-
-                  console.log('Syncing profile with data:', syncData);
-                  console.log('Calling sync-user-profile function...');
-
-                  const { data, error } = await supabase.functions.invoke('sync-user-profile', {
-                    body: syncData
-                  });
-
-                  console.log('Function response:', { data, error });
-                  console.log('Function response data type:', typeof data);
-                  console.log('Function response error type:', typeof error);
-
-                  if (error) {
-                    console.error('Sync error details:', error);
-                    console.error('Error keys:', Object.keys(error));
-                    console.error('Error JSON:', JSON.stringify(error, null, 2));
-                    
-                    let errorMessage = 'Unknown error';
-                    if (error.message) errorMessage = error.message;
-                    if (error.details) errorMessage += ` - ${error.details}`;
-                    if (error.hint) errorMessage += ` (${error.hint})`;
-                    
-                    toast({
-                      title: "Sync Failed",
-                      description: errorMessage,
-                      variant: "destructive"
-                    });
-                  } else {
-                    console.log('Sync successful with data:', data);
-                    toast({
-                      title: "Profile Synced",
-                      description: data?.message || "Your profile has been synced with NotificationAPI successfully.",
-                    });
-                  }
-                } else {
-                  console.error('No profile found for user');
-                  toast({
-                    title: "No Profile",
-                    description: "No profile found for current user.",
-                    variant: "destructive"
-                  });
-                }
-              } catch (error: any) {
-                console.error('=== Manual sync catch block error ===');
-                console.error('Error name:', error.name);
-                console.error('Error message:', error.message);
-                console.error('Error stack:', error.stack);
-                console.error('Full error object:', error);
-                
-                toast({
-                  title: "Sync Error",
-                  description: error.message || "An unexpected error occurred during manual sync.",
-                  variant: "destructive"
-                });
-              }
-              console.log('=== Manual Sync Test Complete ===');
-            }}
-          >
-            Test Sync with NotificationAPI
-          </Button>
+          <div className="text-sm text-muted-foreground">
+            ✅ Automatic daily checks at 9 AM<br/>
+            📅 Smart reminder schedule: 4 weeks → 3 weeks → 2 weeks → 1 week → 1 day<br/>
+            🔔 Only get notified once per reminder period
+          </div>
         </div>
       </CardContent>
     </Card>

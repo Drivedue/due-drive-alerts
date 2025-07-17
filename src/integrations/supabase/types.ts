@@ -113,12 +113,6 @@ export type Database = {
           plan_type: string | null
           profile_image: string | null
           push_notifications: boolean | null
-          reminder_1_day: boolean | null
-          reminder_1_week: boolean | null
-          reminder_2_weeks: boolean | null
-          reminder_3_weeks: boolean | null
-          reminder_4_weeks: boolean | null
-          reminder_days: number | null
           sms_notifications: boolean | null
           updated_at: string
         }
@@ -132,12 +126,6 @@ export type Database = {
           plan_type?: string | null
           profile_image?: string | null
           push_notifications?: boolean | null
-          reminder_1_day?: boolean | null
-          reminder_1_week?: boolean | null
-          reminder_2_weeks?: boolean | null
-          reminder_3_weeks?: boolean | null
-          reminder_4_weeks?: boolean | null
-          reminder_days?: number | null
           sms_notifications?: boolean | null
           updated_at?: string
         }
@@ -151,12 +139,6 @@ export type Database = {
           plan_type?: string | null
           profile_image?: string | null
           push_notifications?: boolean | null
-          reminder_1_day?: boolean | null
-          reminder_1_week?: boolean | null
-          reminder_2_weeks?: boolean | null
-          reminder_3_weeks?: boolean | null
-          reminder_4_weeks?: boolean | null
-          reminder_days?: number | null
           sms_notifications?: boolean | null
           updated_at?: string
         }
