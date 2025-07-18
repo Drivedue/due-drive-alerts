@@ -72,8 +72,8 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center p-4 z-50 safe-area-bottom">
-      <Card className="w-full max-w-md max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 safe-area-bottom">
+      <Card className="w-full max-w-md max-h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Add New Document</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
