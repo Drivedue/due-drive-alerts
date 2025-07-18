@@ -10,6 +10,7 @@ const corsHeaders = {
 interface NotificationRequest {
   documentId: string;
   reminderType: '4_weeks' | '3_weeks' | '2_weeks' | '1_week' | '1_day';
+  isTest?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -31,67 +32,152 @@ const handler = async (req: Request): Promise<Response> => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { documentId, reminderType }: NotificationRequest = await req.json();
+    const { documentId, reminderType, isTest }: NotificationRequest = await req.json();
 
-    // Get document and user details
-    const { data: document, error: docError } = await supabase
-      .from('documents')
-      .select(`
-        *,
-        vehicles(make, model, license_plate)
-      `)
-      .eq('id', documentId)
-      .single();
+    console.log(`🔔 Processing notification: ${reminderType} for document: ${documentId}${isTest ? ' (TEST MODE)' : ''}`);
 
-    if (docError || !document) {
-      throw new Error("Document not found");
+    let document;
+    let userName = 'User';
+    let vehicleName = 'your vehicle';
+    let vehicleNameOrPlate = 'your vehicle';
+    let formattedExpiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+
+    if (isTest) {
+      // Create mock document data for testing
+      document = {
+        id: 'test-document-id',
+        user_id: 'test-user-id',
+        title: 'Test Document',
+        document_type: 'insurance',
+        expiry_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        vehicles: {
+          make: 'Test',
+          model: 'Vehicle',
+          license_plate: 'TEST-123'
+        }
+      };
+      vehicleName = 'Test Vehicle';
+      vehicleNameOrPlate = 'Test Vehicle (TEST-123)';
+      console.log('📝 Using test document data');
+    } else {
+      // Get real document and user details
+      const { data: docData, error: docError } = await supabase
+        .from('documents')
+        .select(`
+          *,
+          vehicles(make, model, license_plate)
+        `)
+        .eq('id', documentId)
+        .single();
+
+      if (docError || !docData) {
+        console.error('❌ Document fetch error:', docError);
+        throw new Error(`Document not found: ${docError?.message || 'Unknown error'}`);
+      }
+
+      document = docData;
+      vehicleName = document.vehicles 
+        ? `${document.vehicles.make} ${document.vehicles.model}`
+        : 'your vehicle';
+      
+      vehicleNameOrPlate = document.vehicles 
+        ? `${document.vehicles.make} ${document.vehicles.model} (${document.vehicles.license_plate})`
+        : 'your vehicle';
+
+      const expiryDate = new Date(document.expiry_date);
+      formattedExpiryDate = expiryDate.toLocaleDateString();
+      console.log(`📋 Found document: ${document.title} - expires ${formattedExpiryDate}`);
     }
 
-    // Get user profile with notification preferences
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', document.user_id)
-      .single();
+    let profile;
+    let user;
+    let isProUser = false;
 
-    if (profileError || !profile) {
-      throw new Error("User profile not found");
+    if (isTest) {
+      // Use current user for testing
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(document.user_id);
+      if (userError) {
+        console.error('❌ Cannot get current user for test:', userError);
+        throw new Error("Cannot determine current user for test");
+      }
+      user = userData;
+
+      // Get current user's profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('❌ Profile fetch error for test:', profileError);
+        throw new Error("Cannot get profile for test");
+      }
+
+      profile = profileData;
+      
+      // Check if test user has Pro plan
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.user.id)
+        .eq('status', 'active')
+        .eq('plan_code', 'pro')
+        .single();
+
+      isProUser = !!subscription;
+      userName = profile.full_name ? profile.full_name.split(' ')[0] : 'there';
+      console.log(`👤 Test user: ${user.user.email} (Pro: ${isProUser})`);
+    } else {
+      // Get user profile with notification preferences
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', document.user_id)
+        .single();
+
+      if (profileError || !profileData) {
+        console.error('❌ Profile fetch error:', profileError);
+        throw new Error(`User profile not found: ${profileError?.message || 'Unknown error'}`);
+      }
+
+      profile = profileData;
+
+      // Get user email from auth
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(document.user_id);
+      if (userError || !userData) {
+        console.error('❌ User fetch error:', userError);
+        throw new Error(`User not found: ${userError?.message || 'Unknown error'}`);
+      }
+
+      user = userData;
+
+      // Check if user has Pro plan for SMS
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', document.user_id)
+        .eq('status', 'active')
+        .eq('plan_code', 'pro')
+        .single();
+
+      isProUser = !!subscription;
+      userName = profile.full_name ? profile.full_name.split(' ')[0] : 'there';
+      console.log(`👤 User: ${user.user.email} (Pro: ${isProUser})`);
     }
-
-    // Get user email from auth
-    const { data: user, error: userError } = await supabase.auth.admin.getUserById(document.user_id);
-    if (userError || !user) {
-      throw new Error("User not found");
-    }
-
-    // Check if user has Pro plan for SMS
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', document.user_id)
-      .eq('status', 'active')
-      .eq('plan_code', 'pro')
-      .single();
-
-    const isProUser = !!subscription;
 
     // Calculate days until expiry
     const expiryDate = new Date(document.expiry_date);
     const now = new Date();
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-    // Create notification content
-    const vehicleName = document.vehicles 
-      ? `${document.vehicles.make} ${document.vehicles.model}`
-      : 'your vehicle';
-    
-    const vehicleNameOrPlate = document.vehicles 
-      ? `${document.vehicles.make} ${document.vehicles.model} (${document.vehicles.license_plate})`
-      : 'your vehicle';
-
-    const userName = profile.full_name ? profile.full_name.split(' ')[0] : 'there';
     const documentType = document.document_type.charAt(0).toUpperCase() + document.document_type.slice(1);
-    const formattedExpiryDate = expiryDate.toLocaleDateString();
+
+    console.log(`📅 Document expires in ${daysUntilExpiry} days (${formattedExpiryDate})`);
+    console.log(`🔧 Notification preferences - Email: ${profile.email_notifications}, Push: ${profile.push_notifications}, SMS: ${profile.sms_notifications} (Pro: ${isProUser})`);
+    
+    if (isTest) {
+      console.log('🧪 TEST MODE: Will send to current user regardless of original document owner');
+    }
 
     // Custom notification templates
     const pushTemplates = {
@@ -227,28 +313,50 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notifications via NotificationAPI SDK
     const results = [];
+    console.log(`📤 Sending ${notifications.length} notifications...`);
+    
     for (const notification of notifications) {
       try {
-        await notificationapi.send({
+        console.log(`🚀 Sending ${notification.notificationId} to user ${notification.user.id || notification.user.email}`);
+        
+        const response = await notificationapi.send({
           notificationId: notification.notificationId,
           user: notification.user,
           mergeTags: notification.mergeTags
         });
         
-        results.push({ type: notification.notificationId, success: true });
+        console.log(`✅ Successfully sent ${notification.notificationId}:`, response);
+        results.push({ type: notification.notificationId, success: true, response });
       } catch (error) {
-        console.error(`Failed to send ${notification.notificationId}:`, error);
-        results.push({ type: notification.notificationId, success: false, error: error.message });
+        console.error(`❌ Failed to send ${notification.notificationId}:`, error);
+        results.push({ 
+          type: notification.notificationId, 
+          success: false, 
+          error: error.message,
+          details: error
+        });
       }
     }
 
+    console.log(`📊 Notification results: ${results.filter(r => r.success).length}/${results.length} successful`);
+
+    const response = {
+      success: true, 
+      document: document.title,
+      reminderType,
+      isTest: isTest || false,
+      notifications: results,
+      summary: {
+        total: results.length,
+        successful: results.filter(r => r.success).length,
+        failed: results.filter(r => !r.success).length
+      }
+    };
+
+    console.log('🎉 Notification process completed:', response.summary);
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        document: document.title,
-        reminderType,
-        notifications: results
-      }),
+      JSON.stringify(response),
       {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -256,12 +364,17 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error("Notification error:", error);
+    console.error("❌ Notification error:", error);
+    
+    const errorResponse = {
+      success: false, 
+      error: error.message,
+      details: error.stack || error.toString(),
+      timestamp: new Date().toISOString()
+    };
+
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
+      JSON.stringify(errorResponse),
       {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },

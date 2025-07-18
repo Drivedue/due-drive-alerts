@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import MobileLayout from "@/components/MobileLayout";
 import NotificationSettings from "@/components/settings/NotificationSettings";
+import NotificationTester from "@/components/settings/NotificationTester";
 import AccountSettings from "@/components/settings/AccountSettings";
 import InformationSection from "@/components/settings/InformationSection";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -16,6 +17,7 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const [userPlan, setUserPlan] = useState("Free");
   const [profile, setProfile] = useState<any>(null);
+  const [isProUser, setIsProUser] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
   const [accountOpen, setAccountOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -48,9 +50,11 @@ const Settings = () => {
     if (subscriptionData && subscriptionData.plan_code === 'pro') {
       console.log('Pro subscription found, setting plan to Pro');
       setUserPlan('Pro');
+      setIsProUser(true);
     } else {
       console.log('No active subscription found, setting plan to Free');
       setUserPlan('Free');
+      setIsProUser(false);
     }
   };
 
@@ -108,6 +112,7 @@ const Settings = () => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <NotificationSettings userPlan={userPlan} />
+            <NotificationTester userPlan={userPlan} isProUser={isProUser} />
           </CollapsibleContent>
         </Collapsible>
 

@@ -83,34 +83,73 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Found ${notifications.length} notifications to send`);
 
+    console.log(`📤 Sending ${notifications.length} notifications...`);
+
     // Send notifications
     const results = [];
     for (const notification of notifications) {
       try {
+        console.log(`🚀 Invoking send-notifications for document ${notification.documentId} - ${notification.reminderType}`);
+        
         const { data: result, error: functionError } = await supabase.functions.invoke('send-notifications', {
           body: notification
         });
 
         if (functionError) {
-          console.error(`Function error for document ${notification.documentId}:`, functionError);
-          results.push({ ...notification, success: false, error: functionError.message || 'Unknown error' });
+          console.error(`❌ Function error for document ${notification.documentId}:`, functionError);
+          results.push({ 
+            ...notification, 
+            success: false, 
+            error: functionError.message || 'Unknown function error',
+            details: functionError
+          });
         } else {
-          results.push({ ...notification, success: true, result });
+          console.log(`✅ Notification sent for document ${notification.documentId}:`, result?.summary);
+          results.push({ 
+            ...notification, 
+            success: true, 
+            result,
+            notificationsSent: result?.summary?.successful || 0
+          });
         }
       } catch (error) {
-        console.error(`Failed to send notification for document ${notification.documentId}:`, error);
-        results.push({ ...notification, success: false, error: error.message });
+        console.error(`❌ Failed to send notification for document ${notification.documentId}:`, error);
+        results.push({ 
+          ...notification, 
+          success: false, 
+          error: error.message,
+          details: error
+        });
       }
     }
 
-    console.log("Document expiry check completed");
+    const successfulNotifications = results.filter(r => r.success).length;
+    const failedNotifications = results.filter(r => !r.success).length;
+    const totalActualNotifications = results.reduce((sum, r) => sum + (r.notificationsSent || 0), 0);
+
+    console.log("📊 Document expiry check completed:");
+    console.log(`   📋 Documents checked: ${documents.length}`);
+    console.log(`   🔔 Notifications triggered: ${notifications.length}`);
+    console.log(`   ✅ Successful: ${successfulNotifications}`);
+    console.log(`   ❌ Failed: ${failedNotifications}`);
+    console.log(`   📧 Total notifications sent: ${totalActualNotifications}`);
+
+    const response = {
+      success: true, 
+      message: `Checked ${documents.length} documents, triggered ${notifications.length} notifications (${successfulNotifications} successful, ${totalActualNotifications} actual notifications sent)`,
+      results,
+      summary: {
+        documentsChecked: documents.length,
+        notificationsTriggered: notifications.length,
+        successful: successfulNotifications,
+        failed: failedNotifications,
+        totalNotificationsSent: totalActualNotifications
+      },
+      timestamp: new Date().toISOString()
+    };
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Checked ${documents.length} documents, sent ${results.filter(r => r.success).length} notifications`,
-        results
-      }),
+      JSON.stringify(response),
       {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -118,12 +157,17 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error("Check expiring documents error:", error);
+    console.error("❌ Check expiring documents error:", error);
+    
+    const errorResponse = {
+      success: false, 
+      error: error.message,
+      details: error.stack || error.toString(),
+      timestamp: new Date().toISOString()
+    };
+
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
+      JSON.stringify(errorResponse),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
