@@ -72,17 +72,17 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="w-full h-full max-w-md p-4 flex flex-col">
-        <Card className="flex-1 flex flex-col min-h-0 max-h-full overflow-hidden" style={{ maxHeight: 'calc(100dvh - 2rem)' }}>
-        <CardHeader className="flex flex-row items-center justify-between">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
+        <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
           <CardTitle>Add New Document</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto">
-          <form id="document-form" onSubmit={handleSubmit} className="space-y-4">
+        
+        <CardContent className="flex-1 overflow-y-auto px-6 py-0">
+          <form id="document-form" onSubmit={handleSubmit} className="space-y-4 pb-4">
             <div>
               <Label htmlFor="title">Document Title</Label>
               <Input
@@ -190,19 +190,28 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
                 rows={3}
               />
             </div>
-            
           </form>
         </CardContent>
-        <div className="flex gap-2 p-4 border-t bg-card flex-shrink-0 safe-area-bottom">
-          <Button type="submit" form="document-form" className="flex-1 bg-primary hover:bg-primary/90 min-h-[44px]">
+        
+        {/* Fixed button section at bottom */}
+        <div className="flex gap-3 p-6 pt-4 border-t bg-card flex-shrink-0">
+          <Button 
+            type="submit" 
+            form="document-form" 
+            className="flex-1 bg-primary hover:bg-primary/90 h-11"
+          >
             Save Document
           </Button>
-          <Button type="button" variant="outline" onClick={onClose} className="flex-1 min-h-[44px]">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onClose} 
+            className="flex-1 h-11"
+          >
             Cancel
           </Button>
         </div>
-        </Card>
-      </div>
+      </Card>
     </div>
   );
 };
