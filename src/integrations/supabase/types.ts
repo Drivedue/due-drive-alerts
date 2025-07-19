@@ -183,6 +183,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          retry_count: number | null
+          status: string
+          sync_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          retry_count?: number | null
+          status: string
+          sync_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          retry_count?: number | null
+          status?: string
+          sync_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vehicles: {
         Row: {
           color: string | null

@@ -72,8 +72,9 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 safe-area-bottom">
-      <Card className="w-full max-w-md max-h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="w-full h-full max-w-md p-4 flex flex-col">
+        <Card className="flex-1 flex flex-col min-h-0 max-h-full overflow-hidden" style={{ maxHeight: 'calc(100dvh - 2rem)' }}>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Add New Document</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -192,15 +193,16 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
             
           </form>
         </CardContent>
-        <div className="flex gap-2 p-6 pt-4 border-t bg-card">
-          <Button type="submit" form="document-form" className="flex-1 bg-primary hover:bg-primary/90">
+        <div className="flex gap-2 p-4 border-t bg-card flex-shrink-0 safe-area-bottom">
+          <Button type="submit" form="document-form" className="flex-1 bg-primary hover:bg-primary/90 min-h-[44px]">
             Save Document
           </Button>
-          <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+          <Button type="button" variant="outline" onClick={onClose} className="flex-1 min-h-[44px]">
             Cancel
           </Button>
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

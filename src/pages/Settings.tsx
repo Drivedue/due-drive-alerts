@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import MobileLayout from "@/components/MobileLayout";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import NotificationTester from "@/components/settings/NotificationTester";
+import SyncStatus from "@/components/settings/SyncStatus";
 import AccountSettings from "@/components/settings/AccountSettings";
 import InformationSection from "@/components/settings/InformationSection";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -112,6 +113,7 @@ const Settings = () => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <NotificationSettings userPlan={userPlan} />
+            <SyncStatus />
             <NotificationTester userPlan={userPlan} isProUser={isProUser} />
           </CollapsibleContent>
         </Collapsible>

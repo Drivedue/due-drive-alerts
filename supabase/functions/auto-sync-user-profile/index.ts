@@ -30,6 +30,21 @@ serve(async (req) => {
   try {
     const { record, old_record } = await req.json();
     console.log('Webhook payload received:', { record, old_record });
+
+    // Log sync attempt to sync_logs table
+    const logSyncAttempt = async (userId: string, status: string, errorMessage?: string) => {
+      try {
+        await supabase.from('sync_logs').insert({
+          user_id: userId,
+          sync_type: 'notification_api_profile',
+          status,
+          error_message: errorMessage,
+          retry_count: 0
+        });
+      } catch (logError) {
+        console.error('Failed to log sync attempt:', logError);
+      }
+    };
     
     // This function is triggered by database webhooks when profiles table is updated
     const userId = record.id;
@@ -95,6 +110,9 @@ serve(async (req) => {
 
       console.log('User profile auto-synced successfully');
       
+      // Log successful sync
+      await logSyncAttempt(userId, 'success');
+      
       return new Response(JSON.stringify({
         success: true,
         data: { message: 'User profile auto-synced successfully' }
@@ -107,6 +125,9 @@ serve(async (req) => {
       });
     } catch (notificationError) {
       console.error('NotificationAPI error during auto-sync:', notificationError);
+      
+      // Log failed sync
+      await logSyncAttempt(userId, 'failed', `NotificationAPI error: ${notificationError.message}`);
       
       return new Response(JSON.stringify({
         success: false,
