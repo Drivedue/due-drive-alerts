@@ -87,10 +87,10 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-0">
       <Card 
-        className="w-full rounded-t-3xl rounded-b-none flex flex-col animate-slide-up"
+        className="w-full rounded-t-3xl rounded-b-none flex flex-col animate-slide-up min-h-0"
         style={{ 
-          maxHeight: '90vh',
-          paddingBottom: Math.max(safeAreaInsets.bottom, 0)
+          height: '85vh',
+          paddingBottom: Math.max(safeAreaInsets.bottom, 16)
         }}
       >
         <CardHeader className="flex flex-row items-center justify-between flex-shrink-0 pb-4">
