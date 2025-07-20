@@ -155,25 +155,6 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
               </Select>
             </div>
 
-            {/* Selected Vehicle Details Card */}
-            {selectedVehicle && (
-              <Card className="bg-blue-50/50 border-blue-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Car className="h-5 w-5 text-blue-600" />
-                    <span className="font-semibold text-blue-900">Selected Vehicle</span>
-                  </div>
-                  <div className="text-sm space-y-2">
-                    <div><span className="font-medium">License Plate:</span> {selectedVehicle.license_plate}</div>
-                    <div><span className="font-medium">Vehicle:</span> {selectedVehicle.make} {selectedVehicle.model}</div>
-                    <div><span className="font-medium">Year:</span> {selectedVehicle.year}</div>
-                    {selectedVehicle.color && (
-                      <div><span className="font-medium">Color:</span> {selectedVehicle.color}</div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             <div>
               <Label htmlFor="issue_date" className="text-base font-medium">Issue Date</Label>
