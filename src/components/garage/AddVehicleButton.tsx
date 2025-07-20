@@ -1,6 +1,6 @@
 
-import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import FloatingActionButton from "@/components/ui/floating-action-button";
 
 interface AddVehicleButtonProps {
   onAddVehicle: () => void;
@@ -8,12 +8,13 @@ interface AddVehicleButtonProps {
 
 const AddVehicleButton = ({ onAddVehicle }: AddVehicleButtonProps) => {
   return (
-    <Button
-      className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-[#0A84FF] hover:bg-[#0A84FF]/90 shadow-lg"
+    <FloatingActionButton
       onClick={onAddVehicle}
-    >
-      <Plus className="h-6 w-6" />
-    </Button>
+      icon={<Plus className="h-6 w-6" />}
+      label="Add Vehicle"
+      variant="primary"
+      size="large"
+    />
   );
 };
 

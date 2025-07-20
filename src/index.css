@@ -40,20 +40,19 @@ All colors MUST be HSL.
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 100%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 207 100% 52%;
-
     --sidebar-primary-foreground: 0 0% 100%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 207 100% 52%;
+
+    /* Safe area insets for mobile devices */
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    --safe-area-inset-left: env(safe-area-inset-left);
+    --safe-area-inset-right: env(safe-area-inset-right);
   }
 
   .dark {
@@ -116,6 +115,7 @@ All colors MUST be HSL.
     body {
       overflow-x: hidden;
       touch-action: manipulation; /* Prevent double-tap zoom */
+      overscroll-behavior-y: contain; /* Prevent bounce scrolling */
     }
   }
 }
@@ -137,6 +137,23 @@ All colors MUST be HSL.
   .safe-area-right {
     padding-right: env(safe-area-inset-right);
   }
+
+  /* Mobile-optimized animations */
+  .animate-slide-up {
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
 /* Mobile viewport fixes */
@@ -145,7 +162,82 @@ All colors MUST be HSL.
   input[type="email"],
   input[type="password"],
   input[type="tel"],
+  input[type="date"],
   textarea {
     font-size: 16px; /* Prevent iOS zoom */
+    -webkit-appearance: none;
+    border-radius: 0.75rem; /* More rounded on mobile */
+  }
+}
+
+/* Custom animations for mobile interactions */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Improve scroll performance on mobile */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Better button press feedback */
+.touch-feedback {
+  transition: all 0.1s ease;
+}
+
+.touch-feedback:active {
+  transform: scale(0.95);
+}
+
+/* Improved form controls for mobile */
+@media (max-width: 768px) {
+  input, textarea, select {
+    min-height: 48px; /* Better touch targets */
+  }
+  
+  button {
+    min-height: 44px; /* iOS minimum touch target */
+    min-width: 44px;
   }
 }

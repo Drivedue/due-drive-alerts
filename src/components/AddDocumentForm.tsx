@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Car } from "lucide-react";
+import { useHaptics } from '@/hooks/useHaptics';
+import { useMobileCapabilities } from '@/hooks/useMobileCapabilities';
 
 interface AddDocumentFormProps {
   onClose: () => void;
@@ -15,6 +17,9 @@ interface AddDocumentFormProps {
 }
 
 const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) => {
+  const { vibrate } = useHaptics();
+  const { safeAreaInsets } = useMobileCapabilities();
+  
   const [formData, setFormData] = useState({
     title: '',
     document_type: '',
@@ -30,6 +35,7 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    vibrate('success');
     
     // Map document types to database-accepted values
     const documentTypeMapping: { [key: string]: string } = {
@@ -57,6 +63,11 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
     onSubmit(documentData);
   };
 
+  const handleClose = () => {
+    vibrate('light');
+    onClose();
+  };
+
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -72,37 +83,50 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
-        <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
-          <CardTitle>Add New Document</CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
+    <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-0">
+      <Card 
+        className="w-full rounded-t-3xl rounded-b-none flex flex-col animate-slide-up"
+        style={{ 
+          maxHeight: '90vh',
+          paddingBottom: Math.max(safeAreaInsets.bottom, 0)
+        }}
+      >
+        <CardHeader className="flex flex-row items-center justify-between flex-shrink-0 pb-4">
+          <CardTitle className="text-xl">Add New Document</CardTitle>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleClose}
+            className="h-10 w-10 rounded-full"
+          >
+            <X className="h-5 w-5" />
           </Button>
         </CardHeader>
         
         <CardContent className="flex-1 overflow-y-auto px-6 py-0">
-          <form id="document-form" onSubmit={handleSubmit} className="space-y-4 pb-4">
+          <form id="document-form" onSubmit={handleSubmit} className="space-y-6 pb-4">
             <div>
-              <Label htmlFor="title">Document Title</Label>
+              <Label htmlFor="title" className="text-base font-medium">Document Title</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleChange('title', e.target.value)}
                 placeholder="e.g., Vehicle Registration"
                 required
+                className="h-12 text-base mt-2"
+                style={{ fontSize: '16px' }}
               />
             </div>
             
             <div>
-              <Label htmlFor="document_type">Document Type</Label>
+              <Label htmlFor="document_type" className="text-base font-medium">Document Type</Label>
               <Select onValueChange={(value) => handleChange('document_type', value)} required>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 text-base mt-2">
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
                 <SelectContent>
                   {documentTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
+                    <SelectItem key={type.value} value={type.value} className="text-base py-3">
                       {type.label}
                     </SelectItem>
                   ))}
@@ -111,28 +135,30 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
             </div>
 
             <div>
-              <Label htmlFor="document_number">Document Number</Label>
+              <Label htmlFor="document_number" className="text-base font-medium">Document Number</Label>
               <Input
                 id="document_number"
                 value={formData.document_number}
                 onChange={(e) => handleChange('document_number', e.target.value)}
                 placeholder="Enter document number"
+                className="h-12 text-base mt-2"
+                style={{ fontSize: '16px' }}
               />
             </div>
             
             <div>
-              <Label htmlFor="vehicle_id">Vehicle</Label>
+              <Label htmlFor="vehicle_id" className="text-base font-medium">Vehicle</Label>
               <Select 
                 onValueChange={(value) => handleChange('vehicle_id', value)} 
                 value={formData.vehicle_id}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-12 text-base mt-2">
                   <SelectValue placeholder="Select vehicle" />
                 </SelectTrigger>
                 <SelectContent>
                   {vehicles.map((vehicle) => (
-                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                    <SelectItem key={vehicle.id} value={vehicle.id} className="text-base py-3">
                       {vehicle.license_plate} - {vehicle.make} {vehicle.model} ({vehicle.year})
                     </SelectItem>
                   ))}
@@ -142,13 +168,13 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
 
             {/* Selected Vehicle Details Card */}
             {selectedVehicle && (
-              <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Car className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-blue-900">Selected Vehicle</span>
+              <Card className="bg-blue-50/50 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Car className="h-5 w-5 text-blue-600" />
+                    <span className="font-semibold text-blue-900">Selected Vehicle</span>
                   </div>
-                  <div className="text-sm space-y-1">
+                  <div className="text-sm space-y-2">
                     <div><span className="font-medium">License Plate:</span> {selectedVehicle.license_plate}</div>
                     <div><span className="font-medium">Vehicle:</span> {selectedVehicle.make} {selectedVehicle.model}</div>
                     <div><span className="font-medium">Year:</span> {selectedVehicle.year}</div>
@@ -161,52 +187,56 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
             )}
 
             <div>
-              <Label htmlFor="issue_date">Issue Date</Label>
+              <Label htmlFor="issue_date" className="text-base font-medium">Issue Date</Label>
               <Input
                 id="issue_date"
                 type="date"
                 value={formData.issue_date}
                 onChange={(e) => handleChange('issue_date', e.target.value)}
+                className="h-12 text-base mt-2"
               />
             </div>
             
             <div>
-              <Label htmlFor="expiry_date">Expiry Date</Label>
+              <Label htmlFor="expiry_date" className="text-base font-medium">Expiry Date</Label>
               <Input
                 id="expiry_date"
                 type="date"
                 value={formData.expiry_date}
                 onChange={(e) => handleChange('expiry_date', e.target.value)}
+                className="h-12 text-base mt-2"
               />
             </div>
             
             <div>
-              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Label htmlFor="notes" className="text-base font-medium">Notes (Optional)</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => handleChange('notes', e.target.value)}
                 placeholder="Any additional notes..."
                 rows={3}
+                className="text-base mt-2 resize-none"
+                style={{ fontSize: '16px' }}
               />
             </div>
           </form>
         </CardContent>
         
         {/* Fixed button section at bottom */}
-        <div className="flex gap-3 p-6 pt-4 border-t bg-card flex-shrink-0">
+        <div className="flex gap-4 p-6 pt-4 border-t bg-card flex-shrink-0">
           <Button 
             type="submit" 
             form="document-form" 
-            className="flex-1 bg-primary hover:bg-primary/90 h-11"
+            className="flex-1 bg-primary hover:bg-primary/90 h-12 text-base font-semibold rounded-xl"
           >
             Save Document
           </Button>
           <Button 
             type="button" 
             variant="outline" 
-            onClick={onClose} 
-            className="flex-1 h-11"
+            onClick={handleClose} 
+            className="flex-1 h-12 text-base font-medium rounded-xl"
           >
             Cancel
           </Button>
