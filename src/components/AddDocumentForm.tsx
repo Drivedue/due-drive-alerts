@@ -21,7 +21,6 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   const { safeAreaInsets } = useMobileCapabilities();
   
   const [formData, setFormData] = useState({
-    title: '',
     document_type: '',
     document_number: '',
     vehicle_id: vehicles.length === 1 ? vehicles[0].id : '',
@@ -48,9 +47,12 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
       'other': 'other'
     };
 
-    // Ensure all required fields are present
+    // Generate title from document type and auto-generate title
+    const selectedDocumentType = documentTypes.find(dt => dt.value === formData.document_type);
+    const autoTitle = selectedDocumentType ? selectedDocumentType.label : 'Document';
+    
     const documentData = {
-      title: formData.title,
+      title: autoTitle,
       document_type: documentTypeMapping[formData.document_type] || formData.document_type,
       document_number: formData.document_number || '',
       vehicle_id: formData.vehicle_id,
@@ -104,20 +106,7 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
         </CardHeader>
         
         <CardContent className="flex-1 overflow-y-auto px-6 py-0">
-          <form id="document-form" onSubmit={handleSubmit} className="space-y-6 pb-4">
-            <div>
-              <Label htmlFor="title" className="text-base font-medium">Document Title</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                placeholder="e.g., Vehicle Registration"
-                required
-                className="h-12 text-base mt-2"
-                style={{ fontSize: '16px' }}
-              />
-            </div>
-            
+          <form id="document-form" onSubmit={handleSubmit} className="space-y-5 pb-4">
             <div>
               <Label htmlFor="document_type" className="text-base font-medium">Document Type</Label>
               <Select onValueChange={(value) => handleChange('document_type', value)} required>
