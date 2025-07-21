@@ -4,6 +4,7 @@ import MobileLayout from "@/components/MobileLayout";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import AccountSettings from "@/components/settings/AccountSettings";
 import InformationSection from "@/components/settings/InformationSection";
+import SyncStatus from "@/components/settings/SyncStatus";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -110,7 +111,10 @@ const Settings = () => {
             </Card>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <NotificationSettings userPlan={userPlan} />
+            <div className="space-y-4">
+              <NotificationSettings userPlan={userPlan} />
+              <SyncStatus />
+            </div>
           </CollapsibleContent>
         </Collapsible>
 
