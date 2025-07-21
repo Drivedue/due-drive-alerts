@@ -194,11 +194,11 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
         </CardContent>
         
         {/* Fixed button section at bottom */}
-        <div className="flex gap-3 p-4 pt-3 border-t bg-card flex-shrink-0">
+        <div className="sticky bottom-0 flex gap-3 p-4 pt-3 border-t bg-background/95 backdrop-blur-sm flex-shrink-0 z-10">
           <Button 
             type="submit" 
             form="document-form" 
-            className="flex-1 bg-primary hover:bg-primary/90 h-10 text-sm font-semibold rounded-lg"
+            className="flex-1 bg-primary hover:bg-primary/90 h-11 text-sm font-semibold rounded-lg"
           >
             Save Document
           </Button>
@@ -206,7 +206,7 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
             type="button" 
             variant="outline" 
             onClick={handleClose} 
-            className="flex-1 h-10 text-sm font-medium rounded-lg"
+            className="flex-1 h-11 text-sm font-medium rounded-lg"
           >
             Cancel
           </Button>
