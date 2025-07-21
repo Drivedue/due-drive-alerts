@@ -87,9 +87,10 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-0">
       <Card 
-        className="w-full rounded-t-3xl rounded-b-none flex flex-col animate-slide-up min-h-0"
+        className="w-full rounded-t-3xl rounded-b-none flex flex-col animate-slide-up"
         style={{ 
-          height: '85vh',
+          height: '90vh',
+          maxHeight: '90vh',
           paddingBottom: Math.max(safeAreaInsets.bottom, 16)
         }}
       >
@@ -115,8 +116,8 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
           </div>
         </CardHeader>
         
-        <CardContent className="flex-1 overflow-y-auto px-6 py-0">
-          <form id="document-form" onSubmit={handleSubmit} className="space-y-5 pb-4">
+        <CardContent className="flex-1 overflow-y-auto px-6 py-0 min-h-0">
+          <form id="document-form" onSubmit={handleSubmit} className="space-y-5 pb-8">
             <div>
               <Label htmlFor="document_type" className="text-base font-medium">Document Type</Label>
               <Select onValueChange={(value) => handleChange('document_type', value)} required>
