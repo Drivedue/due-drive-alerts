@@ -95,14 +95,24 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
       >
         <CardHeader className="flex flex-row items-center justify-between flex-shrink-0 pb-4">
           <CardTitle className="text-xl">Add New Document</CardTitle>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleClose}
-            className="h-10 w-10 rounded-full"
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              type="submit" 
+              form="document-form" 
+              size="sm"
+              className="bg-primary hover:bg-primary/90 h-9 px-4 text-sm font-semibold rounded-lg"
+            >
+              Save
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleClose}
+              className="h-9 w-9 rounded-full"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </CardHeader>
         
         <CardContent className="flex-1 overflow-y-auto px-6 py-0">
@@ -193,24 +203,6 @@ const AddDocumentForm = ({ onClose, onSubmit, vehicles }: AddDocumentFormProps) 
           </form>
         </CardContent>
         
-        {/* Fixed button section at bottom */}
-        <div className="sticky bottom-0 flex gap-3 p-4 pt-3 border-t bg-background/95 backdrop-blur-sm flex-shrink-0 z-10">
-          <Button 
-            type="submit" 
-            form="document-form" 
-            className="flex-1 bg-primary hover:bg-primary/90 h-11 text-sm font-semibold rounded-lg"
-          >
-            Save Document
-          </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={handleClose} 
-            className="flex-1 h-11 text-sm font-medium rounded-lg"
-          >
-            Cancel
-          </Button>
-        </div>
       </Card>
     </div>
   );
