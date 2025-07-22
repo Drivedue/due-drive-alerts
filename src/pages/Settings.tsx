@@ -4,7 +4,7 @@ import MobileLayout from "@/components/MobileLayout";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import AccountSettings from "@/components/settings/AccountSettings";
 import InformationSection from "@/components/settings/InformationSection";
-import UserDataSync from "@/components/settings/UserDataSync";
+
 
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,9 +18,9 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const [userPlan, setUserPlan] = useState("Free");
   const [profile, setProfile] = useState<any>(null);
-  const [isProUser, setIsProUser] = useState(false);
+  
   const [notificationsOpen, setNotificationsOpen] = useState(true);
-  const [syncOpen, setSyncOpen] = useState(false);
+  
   const [accountOpen, setAccountOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -52,11 +52,9 @@ const Settings = () => {
     if (subscriptionData && subscriptionData.plan_code === 'pro') {
       console.log('Pro subscription found, setting plan to Pro');
       setUserPlan('Pro');
-      setIsProUser(true);
     } else {
       console.log('No active subscription found, setting plan to Free');
       setUserPlan('Free');
-      setIsProUser(false);
     }
   };
 
@@ -117,22 +115,6 @@ const Settings = () => {
           </CollapsibleContent>
         </Collapsible>
 
-        {/* Data Sync Section */}
-        <Collapsible open={syncOpen} onOpenChange={setSyncOpen}>
-          <CollapsibleTrigger className="w-full">
-            <Card className="mb-4 cursor-pointer hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Data Sync</CardTitle>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${syncOpen ? 'rotate-180' : ''}`} />
-                </div>
-              </CardHeader>
-            </Card>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <UserDataSync />
-          </CollapsibleContent>
-        </Collapsible>
 
         {/* Account Section */}
         <Collapsible open={accountOpen} onOpenChange={setAccountOpen}>
