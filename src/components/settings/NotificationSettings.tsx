@@ -194,13 +194,6 @@ const NotificationSettings = ({ userPlan }: NotificationSettingsProps) => {
           />
         </div>
 
-        <div className="pt-4 border-t">
-          <div className="text-sm text-muted-foreground">
-            ✅ Automatic daily checks at 9 AM<br/>
-            📅 Smart reminder schedule: 4 weeks → 3 weeks → 2 weeks → 1 week → 1 day<br/>
-            🔔 Only get notified once per reminder period
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
