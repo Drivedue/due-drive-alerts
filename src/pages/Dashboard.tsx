@@ -10,6 +10,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import QuickStats from "@/components/dashboard/QuickStats";
 import UpcomingRenewals from "@/components/dashboard/UpcomingRenewals";
 import InAppNotifications from "@/components/InAppNotifications";
+import { SyncUsersButton } from "@/components/SyncUsersButton";
 import { usePayment } from "@/hooks/usePayment";
 
 const Dashboard = () => {
@@ -192,6 +193,12 @@ const Dashboard = () => {
           onUpdate={handleDocumentUpdate}
         />
       )}
+
+      {/* Sync Users Button - Admin Feature */}
+      <div className="mt-8 p-4 bg-card rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">Admin Tools</h3>
+        <SyncUsersButton />
+      </div>
 
       {/* Vehicle Image Upload Section */}
       <div className="mt-8">
