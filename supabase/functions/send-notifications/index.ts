@@ -35,6 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { documentId, reminderType, isTest }: NotificationRequest = await req.json();
 
     console.log(`🔔 Processing notification: ${reminderType} for document: ${documentId}${isTest ? ' (TEST MODE)' : ''}`);
+    console.log(`🌍 Environment check - Supabase URL: ${supabaseUrl ? 'Set' : 'Missing'}, NotificationAPI Client ID: ${notificationClientId ? 'Set' : 'Missing'}`);
 
     let document;
     let userName = 'User';
@@ -94,13 +95,21 @@ const handler = async (req: Request): Promise<Response> => {
     let isProUser = false;
 
     if (isTest) {
-      // Use current user for testing
-      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(document.user_id);
-      if (userError) {
-        console.error('❌ Cannot get current user for test:', userError);
-        throw new Error("Cannot determine current user for test");
+      // For test mode, get the current authenticated user
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        throw new Error("Authorization header required for test mode");
       }
-      user = userData;
+      
+      const token = authHeader.replace('Bearer ', '');
+      const { data: authUser, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !authUser.user) {
+        console.error('❌ Cannot get authenticated user for test:', authError);
+        throw new Error("Cannot determine authenticated user for test");
+      }
+      
+      user = { user: authUser.user };
 
       // Get current user's profile
       const { data: profileData, error: profileError } = await supabase

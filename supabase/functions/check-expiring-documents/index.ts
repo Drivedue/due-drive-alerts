@@ -47,35 +47,53 @@ const handler = async (req: Request): Promise<Response> => {
       // Skip if already expired or too far in future
       if (daysUntilExpiry < 0 || daysUntilExpiry > 28) continue;
 
-      // Check for reminder triggers (4 weeks = 28 days, 3 weeks = 21 days, etc.)
-      const reminderDays = [28, 21, 14, 7, 1]; // 4 weeks, 3 weeks, 2 weeks, 1 week, 1 day
-      const reminderTypes = ['4_weeks', '3_weeks', '2_weeks', '1_week', '1_day'];
+      // More flexible reminder logic - check ranges instead of exact days
+      const reminderRanges = [
+        { days: [26, 27, 28, 29, 30], type: '4_weeks', name: '4 weeks' },
+        { days: [19, 20, 21, 22, 23], type: '3_weeks', name: '3 weeks' },
+        { days: [12, 13, 14, 15, 16], type: '2_weeks', name: '2 weeks' },
+        { days: [5, 6, 7, 8, 9], type: '1_week', name: '1 week' },
+        { days: [0, 1, 2], type: '1_day', name: '1 day' }
+      ];
 
-      for (let i = 0; i < reminderDays.length; i++) {
-        if (daysUntilExpiry === reminderDays[i]) {
+      console.log(`📋 Document: ${document.title} expires in ${daysUntilExpiry} days`);
+
+      for (const range of reminderRanges) {
+        if (range.days.includes(daysUntilExpiry)) {
           // Check if we already sent this reminder
-          const { data: existingReminder } = await supabase
+          const { data: existingReminder, error: logError } = await supabase
             .from('notification_logs')
-            .select('id')
+            .select('id, sent_at')
             .eq('document_id', document.id)
-            .eq('reminder_type', reminderTypes[i])
+            .eq('reminder_type', range.type)
             .single();
 
+          if (logError && logError.code !== 'PGRST116') {
+            console.error(`❌ Error checking notification logs for ${document.id}:`, logError);
+          }
+
           if (!existingReminder) {
+            console.log(`🔔 Triggering ${range.name} reminder for document ${document.id}`);
             notifications.push({
               documentId: document.id,
-              reminderType: reminderTypes[i],
+              reminderType: range.type,
               daysUntilExpiry
             });
 
             // Log that we're sending this reminder
-            await supabase
+            const { error: insertError } = await supabase
               .from('notification_logs')
               .insert({
                 document_id: document.id,
-                reminder_type: reminderTypes[i],
+                reminder_type: range.type,
                 sent_at: new Date().toISOString()
               });
+
+            if (insertError) {
+              console.error(`❌ Failed to log notification for ${document.id}:`, insertError);
+            }
+          } else {
+            console.log(`⏭️  Skipping ${range.name} reminder for document ${document.id} (already sent on ${existingReminder.sent_at})`);
           }
         }
       }

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import MobileLayout from "@/components/MobileLayout";
 import NotificationSettings from "@/components/settings/NotificationSettings";
+import NotificationTester from "@/components/settings/NotificationTester";
 import AccountSettings from "@/components/settings/AccountSettings";
 import InformationSection from "@/components/settings/InformationSection";
 
@@ -20,7 +21,7 @@ const Settings = () => {
   const [profile, setProfile] = useState<any>(null);
   
   const [notificationsOpen, setNotificationsOpen] = useState(true);
-  
+  const [debugOpen, setDebugOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -112,6 +113,23 @@ const Settings = () => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <NotificationSettings userPlan={userPlan} />
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Debug & Testing Section */}
+        <Collapsible open={debugOpen} onOpenChange={setDebugOpen}>
+          <CollapsibleTrigger className="w-full">
+            <Card className="mb-4 cursor-pointer hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Debug & Testing</CardTitle>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${debugOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </CardHeader>
+            </Card>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <NotificationTester userPlan={userPlan} isProUser={userPlan === 'Pro'} />
           </CollapsibleContent>
         </Collapsible>
 
