@@ -1,5 +1,4 @@
-
-import { Car, LayoutDashboard, Settings, User } from "lucide-react";
+import { Car, LayoutDashboard, Settings, FileText } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useMobileCapabilities } from "@/hooks/useMobileCapabilities";
@@ -13,8 +12,8 @@ const MobileNavigation = () => {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", isActive: location.pathname === "/dashboard" },
     { icon: Car, label: "My Garage", path: "/garage", isActive: location.pathname === "/garage" || location.pathname === "/vehicles" || location.pathname === "/documents" },
-    { icon: Settings, label: "Settings", path: "/settings", isActive: location.pathname === "/settings" },
-    { icon: User, label: "Profile", path: "/profile", isActive: location.pathname === "/profile" }
+    { icon: FileText, label: "Bills", path: "/bills", isActive: location.pathname === "/bills" },
+    { icon: Settings, label: "Settings", path: "/settings", isActive: location.pathname === "/settings" }
   ];
 
   const handleNavigation = (path: string) => {
