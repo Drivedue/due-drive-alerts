@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import PaymentCallback from "./pages/PaymentCallback";
+import Bills from "./pages/Bills";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +38,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/payment/callback" element={<PaymentCallback />} />
+            <Route path="/bills" element={<Bills />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
