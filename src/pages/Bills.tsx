@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   Zap, Wifi, Tv, Droplets, Smartphone, Gamepad2, 
   GraduationCap, Plus, Eye, EyeOff, Wallet, Home, 
-  FileText, History, Settings, User 
+  FileText, History, Settings, User, Car 
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -72,8 +72,8 @@ const Bills = () => {
       <header className="bg-gradient-to-br from-[hsl(210,65%,35%)] to-[hsl(205,70%,47%)] text-white px-5 pt-5 pb-8 rounded-b-[25px] relative overflow-hidden">
         <div className="flex justify-between items-center mb-6 relative z-10">
           <div className="flex items-center gap-2 font-bold text-2xl">
-            <Zap className="w-7 h-7" />
-            <span>Opay</span>
+            <Car className="w-7 h-7" />
+            <span>DriveDue</span>
           </div>
           <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
             <User className="w-5 h-5" />
@@ -194,8 +194,8 @@ const Bills = () => {
       
       {/* Footer */}
       <footer className="text-center py-5 text-xs text-muted-foreground border-t border-border bg-card mb-16">
-        <p>Opay Bills Payment v2.1 • Secure & Reliable</p>
-        <p>© 2023 Opay. All rights reserved.</p>
+        <p>DriveDue Bills Payment • Secure & Reliable</p>
+        <p>© 2025 DriveDue. All rights reserved.</p>
       </footer>
     </div>
   );
