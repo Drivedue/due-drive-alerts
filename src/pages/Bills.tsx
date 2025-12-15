@@ -32,21 +32,21 @@ const Bills = () => {
   const balance = "₦ 45,820.50";
 
   const actionButtons: ActionButton[] = [
-    { id: "electricity", name: "Electricity", icon: <Zap className="w-6 h-6" />, gradient: "bg-gradient-to-br from-rose-300 to-rose-200" },
-    { id: "internet", name: "Internet", icon: <Wifi className="w-6 h-6" />, gradient: "bg-gradient-to-br from-blue-300 to-cyan-200" },
-    { id: "tv", name: "Cable TV", icon: <Tv className="w-6 h-6" />, gradient: "bg-gradient-to-br from-orange-200 to-orange-300" },
-    { id: "water", name: "Water", icon: <Droplets className="w-6 h-6" />, gradient: "bg-gradient-to-br from-green-300 to-cyan-300" },
-    { id: "airtime", name: "Airtime", icon: <Smartphone className="w-6 h-6" />, gradient: "bg-gradient-to-br from-lime-300 to-green-300" },
-    { id: "gaming", name: "Gaming", icon: <Gamepad2 className="w-6 h-6" />, gradient: "bg-gradient-to-br from-pink-200 to-purple-200" },
-    { id: "education", name: "Education", icon: <GraduationCap className="w-6 h-6" />, gradient: "bg-gradient-to-br from-blue-300 to-indigo-400" },
-    { id: "more", name: "More", icon: <Plus className="w-6 h-6" />, gradient: "bg-gradient-to-br from-rose-400 to-pink-500" },
+    { id: "electricity", name: "Electricity", icon: <Zap className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "internet", name: "Internet", icon: <Wifi className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "tv", name: "Cable TV", icon: <Tv className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "water", name: "Water", icon: <Droplets className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "airtime", name: "Airtime", icon: <Smartphone className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "gaming", name: "Gaming", icon: <Gamepad2 className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "education", name: "Education", icon: <GraduationCap className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "more", name: "More", icon: <Plus className="w-6 h-6" />, gradient: "bg-muted" },
   ];
 
   const recentBills: BillItem[] = [
-    { id: "1", name: "IKEDC Electricity Bill", date: "Paid on 15 May, 2023", amount: "₦ 8,450", icon: <Zap className="w-6 h-6" />, gradient: "bg-gradient-to-br from-rose-300 to-rose-200" },
-    { id: "2", name: "Spectranet Internet", date: "Paid on 12 May, 2023", amount: "₦ 15,000", icon: <Wifi className="w-6 h-6" />, gradient: "bg-gradient-to-br from-blue-300 to-cyan-200" },
-    { id: "3", name: "DSTV Subscription", date: "Paid on 10 May, 2023", amount: "₦ 18,500", icon: <Tv className="w-6 h-6" />, gradient: "bg-gradient-to-br from-orange-200 to-orange-300" },
-    { id: "4", name: "Lagos Water", date: "Paid on 5 May, 2023", amount: "₦ 3,200", icon: <Droplets className="w-6 h-6" />, gradient: "bg-gradient-to-br from-green-300 to-cyan-300" },
+    { id: "1", name: "IKEDC Electricity Bill", date: "Paid on 15 May, 2023", amount: "₦ 8,450", icon: <Zap className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "2", name: "Spectranet Internet", date: "Paid on 12 May, 2023", amount: "₦ 15,000", icon: <Wifi className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "3", name: "DSTV Subscription", date: "Paid on 10 May, 2023", amount: "₦ 18,500", icon: <Tv className="w-6 h-6" />, gradient: "bg-muted" },
+    { id: "4", name: "Lagos Water", date: "Paid on 5 May, 2023", amount: "₦ 3,200", icon: <Droplets className="w-6 h-6" />, gradient: "bg-muted" },
   ];
 
   const handleActionClick = (actionId: string, actionName: string) => {
@@ -120,7 +120,7 @@ const Bills = () => {
                   activeAction === action.id ? "bg-blue-50" : "hover:bg-muted/50"
                 }`}
               >
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-white ${action.gradient}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-foreground ${action.gradient}`}>
                   {action.icon}
                 </div>
                 <span className="text-xs sm:text-sm font-medium text-muted-foreground">{action.name}</span>
@@ -141,7 +141,7 @@ const Bills = () => {
                   index !== recentBills.length - 1 ? "border-b border-border" : ""
                 }`}
               >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 text-white ${bill.gradient}`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 text-foreground ${bill.gradient}`}>
                   {bill.icon}
                 </div>
                 <div className="flex-1 text-left">
