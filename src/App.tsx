@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import PaymentCallback from "./pages/PaymentCallback";
 import Bills from "./pages/Bills";
+import Travel from "./pages/Travel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/payment/callback" element={<PaymentCallback />} />
             <Route path="/bills" element={<Bills />} />
+            <Route path="/travel" element={<Travel />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
